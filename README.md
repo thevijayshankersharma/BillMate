@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# BillMate
+
+A simple and modern invoice generation application built with Next.js and Tailwind CSS.
+
+## Features
+
+- Create and manage invoices easily.
+- Modern and responsive user interface using Tailwind CSS.
+- Party (Customer) management with local storage persistence.
+- Dynamic balance calculations.
+- Invoice preview page.
+- ... (Add more features as you develop them)
+
+## Technologies Used
+
+- [Next.js](https://nextjs.org/) - React framework for building web applications.
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework for rapid UI development.
+- [React](https://reactjs.org/) - JavaScript library for building user interfaces.
+- [Lucide React](https://lucide.dev/) - Icon library.
+- [Radix UI](https://www.radix-ui.com/) - For accessible UI primitives (like Select).
 
 ## Getting Started
 
-First, run the development server:
+1.  **Clone the repository:**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+    ```bash
+    git clone <repository_url>
+    ```
+    (Replace `<repository_url>` with your repository URL from GitHub)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2.  **Install dependencies:**
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+    ```bash
+    cd billmate
+    npm install  # or yarn install or pnpm install
+    ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3.  **Run the development server:**
 
-## Learn More
+    ```bash
+    npm run dev # or yarn dev or pnpm dev
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+    Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
