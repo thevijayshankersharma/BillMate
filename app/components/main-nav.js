@@ -6,10 +6,10 @@ import { cn } from "../lib/utils";
 
 export function MainNav() {
   const items = [
-    { title: "Home", href: "/", icon: Home },
-    { title: "Sales", href: "/sales", icon: Banknote },
-    { title: "Purchases", href: "/purchases", icon: Package },
-    { title: "Settings", href: "/settings", icon: Settings },
+    { title: "Home", href: "/invoice-form", icon: Home }, // Corrected href to "/invoice-form"
+    { title: "Sales", href: "/sales", icon: Banknote }, // Example - adjust if you have a sales page
+    { title: "Purchases", href: "/purchases", icon: Package }, // Example - adjust if you have a purchases page
+    { title: "Settings", href: "/profile", icon: Settings }, // Corrected href to "/profile" and updated title to Settings (Profile)
   ];
 
   const pathname = usePathname();
@@ -21,13 +21,11 @@ export function MainNav() {
           key={item.href}
           href={item.href}
           className={cn(
-            "flex items-center gap-2 text-sm font-medium transition-colors text-gray-700 hover:text-indigo-600", // Changed text colors and hover effect
-            pathname === item.href
-              ? "text-indigo-600" // Active link color
-              : "text-gray-500" // Default muted color
+            "flex items-center gap-2 text-sm font-medium transition-colors text-gray-700 hover:text-indigo-600",
+            pathname === item.href ? "text-indigo-600" : "text-gray-500"
           )}
         >
-          <item.icon className="h-4 w-4 text-gray-500" /> {/* Muted icons */}
+          <item.icon className="h-4 w-4 text-gray-500" />
           {item.title}
         </Link>
       ))}

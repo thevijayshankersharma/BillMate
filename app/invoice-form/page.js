@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect } from "react";
 import { FileText, Trash2, X } from "lucide-react";
-import { Button } from "./ui/button";
-import { FormItem, FormLabel } from "./ui/form";
-import { Input } from "./ui/input";
+import { Button } from "../components/ui/button";
+import { FormItem, FormLabel } from "../components/ui/form";
+import { Input } from "../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
-import { Textarea } from "./ui/textarea";
+} from "../components/ui/select";
+import { Textarea } from "../components/ui/textarea";
 import { useRouter } from "next/navigation";
 
 // GSTIN parser used for lookup only (it does not alter the original input)
@@ -66,7 +66,10 @@ function parseGSTIN(gstin) {
   return { state, gstType };
 }
 
-export function InvoiceForm() {
+// ========================================================
+// IMPORTANT: Changed `export function` to `export default function`
+// ========================================================
+export default function InvoiceForm() {
   const router = useRouter();
 
   // Invoice details state
@@ -831,8 +834,8 @@ export function InvoiceForm() {
 
           {/* Action Buttons */}
           <div className="mt-8 flex justify-end gap-3">
-            <Button variant="outline" onClick={handleShare} className="rounded-md shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Share</Button>
-            <Button onClick={handleSave} className="rounded-md shadow-sm hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Save</Button>
+            <Button variant="outline" onClick={handleShare}>Share</Button>
+            <Button onClick={handleSave}>Save</Button>
           </div>
         </div>
       </div>
