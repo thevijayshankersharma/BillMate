@@ -58,10 +58,21 @@ export default function InvoicePage() {
         if (storedInvoice) {
             setInvoice(JSON.parse(storedInvoice));
         }
-        const storedProfile = localStorage.getItem("profileData"); // Fetch profile data from localStorage
-        if (storedProfile) {
-            setProfile(JSON.parse(storedProfile));
-        }
+        // Fetch profile data from API instead of localStorage
+        const fetchProfileData = async () => {
+            try {
+                const response = await fetch('/api/profile');
+                if (response.ok) {
+                    const profileData = await response.json();
+                    setProfile(profileData);
+                } else {
+                    console.error("Failed to fetch profile from API");
+                }
+            } catch (error) {
+                console.error("Error fetching profile from API:", error);
+            }
+        };
+        fetchProfileData(); // Call the fetch function
     }, []);
 
     if (!invoice) return <div className="p-4">Loading invoice...</div>;
@@ -101,8 +112,12 @@ export default function InvoicePage() {
                             {profile.gstin && <p className="text-sm text-gray-600 mt-1">GSTIN : {profile.gstin}</p>}
                             {profile.state && <p className="text-sm text-gray-600 mt-1">State : {profile.state}</p>}
                         </div>
-                        <div className="w-20 h-20 bg-gray-100 rounded-md flex items-center justify-center shadow-sm">
-                            <span className="text-gray-500 text-xs font-medium uppercase">Logo</span>
+                        <div className="w-20 h-20 rounded-md flex items-center justify-center shadow-sm overflow-hidden">
+                            {profile.logoUrl ? (
+                                <img src={profile.logoUrl} alt="Company Logo" className="object-cover w-full h-full" />
+                            ) : (
+                                <span className="text-gray-500 text-xs font-medium uppercase">Logo</span>
+                            )}
                         </div>
                     </div>
 
@@ -269,8 +284,13 @@ export default function InvoicePage() {
 
                     {/* Footer */}
                     <div className="text-right mt-12">
-                        <p className="mb-8 text-gray-700">For: {profile.companyName}</p>
-                        <div className="border-t border-gray-300 pt-3 inline-block">
+                        <p className="mb-2 text-gray-700">For: {profile.companyName}</p>
+                        {profile.signatureUrl && (
+                            <div className="mb-2">
+                                <img src={profile.signatureUrl} alt="Authorized Signature" className="max-h-20 inline-block" />
+                            </div>
+                        )}
+                        <div className="border-t border-gray-300 pt-1 inline-block">
                             <p className="text-gray-800 font-semibold">Authorized Signatory</p>
                         </div>
                     </div>

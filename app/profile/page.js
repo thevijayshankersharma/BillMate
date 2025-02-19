@@ -1,3 +1,4 @@
+// app/profile/page.js
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
@@ -15,7 +16,7 @@ import {
 // GSTIN parser function (copied from InvoiceForm for ProfilePage functionality)
 function parseGSTIN(gstin) {
     if (!gstin) {
-        return { state: "" };
+        return "";
     }
     let stateCode = gstin.length >= 2 ? gstin.substring(0, 2) : "0" + gstin;
     const statesMap = {
@@ -60,19 +61,18 @@ function parseGSTIN(gstin) {
     return statesMap[stateCode] || "";
 }
 
-
 export default function ProfilePage() {
     const [companyName, setCompanyName] = useState('');
     const [address, setAddress] = useState('');
     const [gstin, setGstin] = useState('');
-    const [state, setState] = useState(''); // Initialize state as empty string
+    const [state, setState] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    const [logo, setLogo] = useState(null);
-    const [signature, setSignature] = useState(null);
+    const [logo, setLogo] = useState(null); // State for logo file
+    const [signature, setSignature] = useState(null); // State for signature file
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
-    const indianStates = [ // Array of Indian states for Select component
+    const indianStates = [
         "JAMMU AND KASHMIR", "HIMACHAL PRADESH", "PUNJAB", "CHANDIGARH", "UTTARAKHAND",
         "HARYANA", "DELHI", "RAJASTHAN", "UTTAR PRADESH", "BIHAR", "SIKKIM",
         "ARUNACHAL PRADESH", "NAGALAND", "MANIPUR", "MIZORAM", "TRIPURA",
@@ -82,7 +82,6 @@ export default function ProfilePage() {
         "KERALA", "TAMIL NADU", "PUDUCHERRY", "ANDAMAN AND NICOBAR ISLANDS", "TELANGANA",
         "LADAKH"
     ];
-
 
     useEffect(() => {
         fetchProfile();
@@ -99,7 +98,7 @@ export default function ProfilePage() {
                 setState(profileData.state || '');
                 setEmail(profileData.email || '');
                 setPhone(profileData.phone || '');
-                // Handle logo and signature loading
+                // Handle logo and signature URLs if backend returns them
             } else {
                 console.error("Failed to fetch profile");
             }
@@ -113,19 +112,30 @@ export default function ProfilePage() {
         setMessage('');
         setError('');
 
-        const profileData = { companyName, address, gstin, state, email, phone, /* logo, signature - to be implemented */ };
+        const formData = new FormData();
+
+        formData.append('companyName', companyName);
+        formData.append('address', address);
+        formData.append('gstin', gstin);
+        formData.append('state', state);
+        formData.append('email', email);
+        formData.append('phone', phone);
+        if (logo) {
+            formData.append('logo', logo);
+        }
+        if (signature) {
+            formData.append('signature', signature);
+        }
 
         try {
             const response = await fetch('/api/profile', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(profileData),
+                body: formData,
             });
 
             if (response.ok) {
                 setMessage('Profile updated successfully!');
                 fetchProfile();
-                localStorage.setItem("profileData", JSON.stringify(profileData));
             } else {
                 setError('Failed to update profile.');
             }
@@ -135,14 +145,28 @@ export default function ProfilePage() {
         }
     };
 
-    // Function to handle GSTIN change and update state
     const handleGSTINChange = (e) => {
         const gstinValue = e.target.value;
         setGstin(gstinValue);
         const parsedState = parseGSTIN(gstinValue);
-        setState(parsedState); // Automatically set state based on GSTIN
+        setState(parsedState);
     };
 
+    const handleLogoChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setLogo(e.target.files[0]);
+        } else {
+            setLogo(null);
+        }
+    };
+
+    const handleSignatureChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setSignature(e.target.files[0]);
+        } else {
+            setSignature(null);
+        }
+    };
 
     return (
         <div className="container mx-auto p-6">
@@ -169,7 +193,7 @@ export default function ProfilePage() {
                     <Input
                         type="text"
                         value={gstin}
-                        onChange={handleGSTINChange} // Use handleGSTINChange for GSTIN input
+                        onChange={handleGSTINChange}
                         placeholder="GSTIN"
                     />
                 </FormItem>
@@ -188,7 +212,30 @@ export default function ProfilePage() {
                         </SelectContent>
                     </Select>
                 </FormItem>
-                {/* File upload inputs for logo and signature to be added later */}
+
+                <FormItem>
+                    <FormLabel>Logo</FormLabel>
+                    <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                    />
+                    {logo && (
+                        <p className="mt-1 text-sm text-gray-500">Selected Logo: {logo.name}</p>
+                    )}
+                </FormItem>
+
+                <FormItem>
+                    <FormLabel>Signature</FormLabel>
+                    <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleSignatureChange}
+                    />
+                    {signature && (
+                        <p className="mt-1 text-sm text-gray-500">Selected Signature: {signature.name}</p>
+                    )}
+                </FormItem>
 
                 <Button type="submit">Save Profile</Button>
                 {message && <p className="text-green-500 mt-2">{message}</p>}
