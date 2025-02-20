@@ -17,7 +17,7 @@ export default function LandingPage() {
                         <Link href="/login">
                             <Button variant="outline">Login</Button>
                         </Link>
-                        <Link href="/login"> {/* For simplicity, linking Register to Login for single user */}
+                        <Link href="/register"> {/* For simplicity, linking Register to Login for single user */}
                             <Button>Register</Button>
                         </Link>
                     </nav>
