@@ -1,65 +1,68 @@
 "use client";
+
 import { Banknote, Home, Package, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "../lib/utils";
-import { Button } from "./ui/button"; // Import Button component
-import React, { useState, useEffect } from 'react'; // Import useState and useEffect
+import { Button } from "./ui/button";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
 export function MainNav() {
   const items = [
-    { title: "Home", href: "/invoice-form", icon: Home }, // Corrected href to "/invoice-form" - Consider renaming to Invoice or Dashboard if it's not just for invoice form
-    { title: "Sales", href: "/sales", icon: Banknote }, // Example - adjust if you have a sales page
-    { title: "Purchases", href: "/purchases", icon: Package }, // Example - adjust if you have a purchases page
-    { title: "Settings", href: "/profile", icon: Settings }, // Corrected href to "/profile" and updated title to Settings (Profile)
+    { title: "Home", href: "/invoice-form", icon: Home },
+    { title: "Sales", href: "/sales", icon: Banknote },
+    { title: "Purchases", href: "/purchases", icon: Package },
+    { title: "Settings", href: "/profile", icon: Settings },
   ];
 
   const pathname = usePathname();
-  const router = useRouter(); // Use useRouter for redirection
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // State to track login status
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Client-side effect to check login status from localStorage
-    const storedLoginStatus = localStorage.getItem('isLoggedIn');
-    const loggedIn = storedLoginStatus === 'true';
-    setIsLoggedIn(loggedIn);
+    const storedLoginStatus = localStorage.getItem("isLoggedIn");
+    setIsLoggedIn(storedLoginStatus === "true");
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn'); // Clear login status from localStorage
-    setIsLoggedIn(false); // Update local state to logged out
-    router.push('/login'); // Redirect to login page after logout
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+    router.push("/login");
   };
 
   return (
-    <nav className="ml-6 flex items-center space-x-4 lg:space-x-6">
-      {isLoggedIn && items.map((item) => ( // Conditionally render navigation items when logged in
-        <Link
-          key={item.href}
-          href={item.href}
-          className={cn(
-            "flex items-center gap-2 text-sm font-medium transition-colors text-gray-700 hover:text-indigo-600",
-            pathname === item.href ? "text-indigo-600" : "text-gray-500"
-          )}
-        >
-          <item.icon className="h-4 w-4 text-gray-500" />
-          {item.title}
-        </Link>
-      ))}
-      {isLoggedIn && ( // Conditionally render Logout button when logged in
-        <Button variant="outline" size="sm" onClick={handleLogout}>
-          Logout
-        </Button>
-      )}
-      {!isLoggedIn && ( // Conditionally render Login and Register buttons when logged out (Optional - if you want them in MainNav)
-        <>
-          <Link href="/login">
-            <Button variant="outline" size="sm">Login</Button>
-          </Link>
-          <Link href="/register">
-            <Button size="sm">Register</Button>
-          </Link>
-        </>
+    <nav className="flex items-center space-x-6">
+      {isLoggedIn &&
+        items.map((item) => (
+          <motion.div
+            key={item.href}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Link
+              href={item.href}
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium transition-colors",
+                pathname === item.href ? "text-indigo-600" : "text-gray-600 hover:text-indigo-500"
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.title}
+            </Link>
+          </motion.div>
+        ))}
+      {isLoggedIn && (
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className="rounded-lg text-gray-600 hover:text-indigo-500"
+          >
+            Logout
+          </Button>
+        </motion.div>
       )}
     </nav>
   );

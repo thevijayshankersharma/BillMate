@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FileText, Trash2, X } from "lucide-react";
+import { FileText, Trash2, X, Plus } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { FormItem, FormLabel } from "../components/ui/form";
 import { Input } from "../components/ui/input";
@@ -16,10 +16,8 @@ import { Textarea } from "../components/ui/textarea";
 import { useRouter } from "next/navigation";
 
 function parseGSTIN(gstin) {
-  if (!gstin) {
-    return { state: "", gstType: "Unregistered/Consumer" };
-  }
-  let stateCode = gstin.length >= 2 ? gstin.substring(0, 2) : "0" + gstin;
+  if (!gstin) return { state: "", gstType: "Unregistered/Consumer" };
+  const stateCode = gstin.length >= 2 ? gstin.substring(0, 2) : "0" + gstin;
   const statesMap = {
     "01": "JAMMU AND KASHMIR",
     "02": "HIMACHAL PRADESH",
@@ -67,22 +65,8 @@ function parseGSTIN(gstin) {
 export default function InvoiceForm() {
   const router = useRouter();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
-  useEffect(() => {
-    const storedLoginStatus = localStorage.getItem('isLoggedIn');
-    const isLoggedIn = storedLoginStatus === 'true';
-
-    if (!isLoggedIn) {
-      console.log("InvoiceFormPage: User not logged in, redirecting to /login");
-      router.push('/login');
-    }
-    setIsCheckingAuth(false);
-  }, [router]);
-
   const [invoiceNumber, setInvoiceNumber] = useState(1);
-  const [invoiceDate, setInvoiceDate] = useState(
-    new Date().toISOString().substring(0, 10)
-  );
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().substring(0, 10));
   const [customer, setCustomer] = useState("");
   const [billingAddress, setBillingAddress] = useState("");
   const [phone, setPhone] = useState("");
@@ -108,10 +92,16 @@ export default function InvoiceForm() {
   const [partyEmail, setPartyEmail] = useState("");
 
   useEffect(() => {
-    const storedParties = localStorage.getItem("parties");
-    if (storedParties) {
-      setParties(JSON.parse(storedParties));
+    const storedLoginStatus = localStorage.getItem("isLoggedIn");
+    if (storedLoginStatus !== "true") {
+      router.push("/login");
     }
+    setIsCheckingAuth(false);
+  }, [router]);
+
+  useEffect(() => {
+    const storedParties = localStorage.getItem("parties");
+    if (storedParties) setParties(JSON.parse(storedParties));
   }, []);
 
   useEffect(() => {
@@ -146,13 +136,7 @@ export default function InvoiceForm() {
     setPhone(newParty.phone || "");
     setBillingAddress(newParty.billingAddress || "");
     setShowAddPartyModal(false);
-    setPartyName("");
-    setPartyGSTIN("");
-    setPartyPhone("");
-    setPartyBillingAddress("");
-    setPartyState("");
-    setPartyGSTType("");
-    setPartyEmail("");
+    resetPartyFields();
   };
 
   const handleSavePartyAndNew = () => {
@@ -174,6 +158,10 @@ export default function InvoiceForm() {
     setSelectedParty(newParty);
     setPhone(newParty.phone || "");
     setBillingAddress(newParty.billingAddress || "");
+    resetPartyFields();
+  };
+
+  const resetPartyFields = () => {
     setPartyName("");
     setPartyGSTIN("");
     setPartyPhone("");
@@ -213,42 +201,13 @@ export default function InvoiceForm() {
   const grandTotal = items.reduce((acc, item) => acc + calculateTotal(item), 0);
 
   const indianStates = [
-    "JAMMU AND KASHMIR",
-    "HIMACHAL PRADESH",
-    "PUNJAB",
-    "CHANDIGARH",
-    "UTTARAKHAND",
-    "HARYANA",
-    "DELHI",
-    "RAJASTHAN",
-    "UTTAR PRADESH",
-    "BIHAR",
-    "SIKKIM",
-    "ARUNACHAL PRADESH",
-    "NAGALAND",
-    "MANIPUR",
-    "MIZORAM",
-    "TRIPURA",
-    "MEGHALAYA",
-    "ASSAM",
-    "WEST BENGAL",
-    "JHARKHAND",
-    "ODISHA",
-    "CHATTISGARH",
-    "MADHYA PRADESH",
-    "GUJARAT",
-    "DADRA AND NAGAR HAVELI AND DAMAN AND DIU",
-    "MAHARASHTRA",
-    "ANDHRA PRADESH",
-    "KARNATAKA",
-    "GOA",
-    "LAKSHADWEEP",
-    "KERALA",
-    "TAMIL NADU",
-    "PUDUCHERRY",
-    "ANDAMAN AND NICOBAR ISLANDS",
-    "TELANGANA",
-    "LADAKH",
+    "JAMMU AND KASHMIR", "HIMACHAL PRADESH", "PUNJAB", "CHANDIGARH", "UTTARAKHAND",
+    "HARYANA", "DELHI", "RAJASTHAN", "UTTAR PRADESH", "BIHAR", "SIKKIM",
+    "ARUNACHAL PRADESH", "NAGALAND", "MANIPUR", "MIZORAM", "TRIPURA", "MEGHALAYA",
+    "ASSAM", "WEST BENGAL", "JHARKHAND", "ODISHA", "CHATTISGARH", "MADHYA PRADESH",
+    "GUJARAT", "DADRA AND NAGAR HAVELI AND DAMAN AND DIU", "MAHARASHTRA",
+    "ANDHRA PRADESH", "KARNATAKA", "GOA", "LAKSHADWEEP", "KERALA", "TAMIL NADU",
+    "PUDUCHERRY", "ANDAMAN AND NICOBAR ISLANDS", "TELANGANA", "LADAKH",
   ];
 
   const handleSave = () => {
@@ -276,14 +235,9 @@ export default function InvoiceForm() {
       (acc, item) => acc + ((parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0)),
       0
     );
-    const taxTotal = items.reduce((acc, item) => {
-      const price = parseFloat(item.price) || 0;
-      const qty = parseFloat(item.qty) || 0;
-      return acc + price * qty * (item.tax === "GST@18%" ? 0.18 : 0);
-    }, 0);
+    const taxTotal = totalTax;
     const calculatedGrandTotal = baseTotal + taxTotal;
     const isIntraState = stateOfSupply.trim().toLowerCase() === "gujarat";
-
     let sgst = 0, cgst = 0, igst = 0;
     if (isIntraState) {
       sgst = taxTotal / 2;
@@ -293,10 +247,7 @@ export default function InvoiceForm() {
     }
 
     const invoiceData = {
-      company: {
-        name: "ETRONICS SOLUTIONS",
-        phone: "8142870951",
-      },
+      company: { name: "ETRONICS SOLUTIONS", phone: "8142870951" },
       customer: {
         name: selectedParty ? selectedParty.name : customer,
         contact: phone,
@@ -304,20 +255,14 @@ export default function InvoiceForm() {
         gstin: selectedParty ? selectedParty.gstin : "",
         state: selectedParty ? selectedParty.state : "",
       },
-      invoice: {
-        number: invoiceNumber.toString(),
-        date: invoiceDate,
-      },
+      invoice: { number: invoiceNumber.toString(), date: invoiceDate },
       items: items.map((item) => ({
         name: item.name,
         hsn: item.hsn,
         qty: Number(item.qty),
         price: Number(item.price),
         tax: item.tax,
-        amount:
-          (parseFloat(item.price) || 0) *
-          (parseFloat(item.qty) || 0) *
-          (item.tax === "GST@18%" ? 1.18 : 1),
+        amount: calculateTotal(item),
       })),
       totals: {
         subTotal: baseTotal,
@@ -336,9 +281,7 @@ export default function InvoiceForm() {
     router.push("/invoice/1");
   };
 
-  if (isCheckingAuth) {
-    return null;
-  }
+  if (isCheckingAuth) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-6 sm:py-12">
@@ -352,459 +295,515 @@ export default function InvoiceForm() {
           -moz-appearance: textfield;
         }
       `}</style>
-      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden md:max-w-4xl lg:max-w-5xl xl:max-w-6xl">
-        <div className="px-4 py-5 sm:p-6">
-          <h1 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Create Sale Invoice</h1>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-4">
-              <FormItem>
-                <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Customer *</FormLabel>
-                <Select
-                  value={selectedParty ? selectedParty.id.toString() : ""}
-                  onValueChange={(value) => {
-                    if (value === "add") {
-                      setShowAddPartyModal(true);
-                    } else {
-                      const party = parties.find((p) => p.id.toString() === value);
-                      setSelectedParty(party);
-                      setPhone(party.phone || "");
-                      setBillingAddress(party.billingAddress || "");
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" side="top">
-                    <SelectValue placeholder="Select Party" className="text-gray-700" />
-                  </SelectTrigger>
-                  <SelectContent side="top" className="z-50">
-                    <SelectItem value="add" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">+ Add Party</SelectItem>
-                    {parties.map((party) => (
-                      <SelectItem key={party.id} value={party.id.toString()} className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">
-                        {party.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-              <FormItem>
-                <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Phone Number</FormLabel>
-                <Input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter phone number"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                />
-              </FormItem>
-              <FormItem>
-                <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Billing Address</FormLabel>
-                <Textarea
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  value={billingAddress}
-                  onChange={(e) => setBillingAddress(e.target.value)}
-                  placeholder="Enter billing address"
-                  rows={3}
-                />
-              </FormItem>
-            </div>
-            <div className="space-y-4">
-              <div className="flex justify-between gap-4">
-                <FormItem className="w-1/2">
-                  <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Invoice Number</FormLabel>
-                  <Input
-                    type="number"
-                    step="any"
-                    min="0"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    value={invoiceNumber}
-                    onChange={(e) => setInvoiceNumber(Number(e.target.value))}
-                  />
-                </FormItem>
-                <FormItem className="w-1/2">
-                  <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Invoice Date</FormLabel>
-                  <Input
-                    type="date"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    value={invoiceDate}
-                    onChange={(e) => setInvoiceDate(e.target.value)}
-                  />
-                </FormItem>
-              </div>
-              <FormItem>
-                <FormLabel className="block text-sm font-medium text-gray-700 mb-1">State of Supply</FormLabel>
-                <Select value={stateOfSupply} onValueChange={setStateOfSupply}>
-                  <SelectTrigger className="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" side="top">
-                    <SelectValue placeholder="None" className="text-gray-700" />
-                  </SelectTrigger>
-                  <SelectContent side="top" className="z-50">
-                    <SelectItem value="none" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">None</SelectItem>
-                    {indianStates.map((state) => (
-                      <SelectItem key={state} value={state} className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">
-                        {state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            </div>
-          </div>
-          {showAddPartyModal && (
-            <div className="fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <div className="bg-white p-6 z-10 w-full max-w-md rounded-lg shadow-xl transform transition-transform duration-300 ease-in-out">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold text-gray-800">Add Party</h3>
-                  <button
-                    onClick={() => setShowAddPartyModal(false)}
-                    className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="col-span-full">
-                    <FormItem>
-                      <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Party Name *</FormLabel>
-                      <Input
-                        type="text"
-                        value={partyName}
-                        onChange={(e) => setPartyName(e.target.value)}
-                        placeholder="Enter party name"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                    </FormItem>
-                  </div>
-                  <div>
-                    <FormItem>
-                      <FormLabel className="block text-sm font-medium text-gray-700 mb-1">GSTIN</FormLabel>
-                      <Input
-                        type="text"
-                        value={partyGSTIN}
-                        onChange={handleGSTINChange}
-                        placeholder="Enter GSTIN"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                    </FormItem>
-                  </div>
-                  <div>
-                    <FormItem>
-                      <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Phone Number</FormLabel>
-                      <Input
-                        type="text"
-                        value={partyPhone}
-                        onChange={(e) => setPartyPhone(e.target.value)}
-                        placeholder="Enter phone number"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                    </FormItem>
-                  </div>
-                  <div className="col-span-full">
-                    <FormItem>
-                      <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Billing Address</FormLabel>
-                      <Textarea
-                        value={partyBillingAddress}
-                        onChange={(e) => setPartyBillingAddress(e.target.value)}
-                        placeholder="Enter billing address"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        rows={2}
-                      />
-                    </FormItem>
-                  </div>
-                  <div>
-                    <FormItem>
-                      <FormLabel className="block text-sm font-medium text-gray-700 mb-1">State</FormLabel>
-                      <Select value={partyState} onValueChange={setPartyState}>
-                        <SelectTrigger className="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" side="top">
-                          <SelectValue placeholder="Select State" className="text-gray-700" />
-                        </SelectTrigger>
-                        <SelectContent side="top" className="z-50">
-                          {indianStates.map((s) => (
-                            <SelectItem key={s} value={s} className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">
-                              {s}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  </div>
-                  <div>
-                    <FormItem>
-                      <FormLabel className="block text-sm font-medium text-gray-700 mb-1">GST Type</FormLabel>
-                      <Select value={partyGSTType} onValueChange={setPartyGSTType}>
-                        <SelectTrigger className="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" side="top">
-                          <SelectValue placeholder="Select GST Type" className="text-gray-700" />
-                        </SelectTrigger>
-                        <SelectContent side="top" className="z-50">
-                          <SelectItem value="Unregistered/Consumer" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">
-                            Unregistered/Consumer
-                          </SelectItem>
-                          <SelectItem value="Registered Business - Regular" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">
-                            Registered Business - Regular
-                          </SelectItem>
-                          <SelectItem value="Registered Business - Composition" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">
-                            Registered Business - Composition
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  </div>
-                  <div className="col-span-full">
-                    <FormItem>
-                      <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Email ID</FormLabel>
-                      <Input
-                        type="email"
-                        value={partyEmail}
-                        onChange={(e) => setPartyEmail(e.target.value)}
-                        placeholder="Enter Email ID"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                    </FormItem>
-                  </div>
-                </div>
-                <div className="mt-6 flex justify-end gap-3">
-                  <Button variant="secondary" onClick={() => setShowAddPartyModal(false)} className="rounded-md shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Cancel</Button>
-                  <Button onClick={handleSavePartyAndNew} className="rounded-md shadow-sm hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Save & New</Button>
-                  <Button onClick={handleAddParty} className="rounded-md shadow-sm hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Save</Button>
-                </div>
-              </div>
-            </div>
-          )}
-          <div className="mt-8">
-            <div className="shadow overflow-hidden border border-gray-200 sm:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ITEM</th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HSN CODE</th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">QTY</th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UNIT</th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <span>PRICE/UNIT</span>
-                      <Select defaultValue="without">
-                        <SelectTrigger className="ml-1 inline-block h-8 text-xs bg-white border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" side="top">
-                          <SelectValue className="text-gray-700">Without Tax</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent side="top" className="z-50">
-                          <SelectItem value="without" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">Without Tax</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TAX</th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AMOUNT</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {items.map((item, index) => (
-                    <tr key={item.id} className="group hover:bg-gray-50 transition-colors duration-200">
-                      <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center space-x-2">
-                        <span>{index + 1}</span>
-                        <button
-                          onClick={() => handleDeleteRow(item.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full p-1 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </button>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                        <Input
-                          className="bg-transparent border-0 p-0 h-8 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm"
-                          value={item.name}
-                          onChange={(e) =>
-                            setItems(
-                              items.map((i) =>
-                                i.id === item.id ? { ...i, name: e.target.value } : i
-                              )
-                            )
-                          }
-                        />
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                        <Input
-                          className="bg-transparent border-0 p-0 h-8 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm"
-                          value={item.hsn}
-                          onChange={(e) =>
-                            setItems(
-                              items.map((i) =>
-                                i.id === item.id ? { ...i, hsn: e.target.value } : i
-                              )
-                            )
-                          }
-                        />
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                        <Input
-                          type="number"
-                          step="any"
-                          min="0"
-                          className="bg-transparent border-0 p-0 h-8 w-16 focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm"
-                          value={item.qty}
-                          onChange={(e) =>
-                            setItems(
-                              items.map((i) =>
-                                i.id === item.id ? { ...i, qty: e.target.value } : i
-                              )
-                            )
-                          }
-                        />
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                        <Select
-                          value={item.unit}
-                          onValueChange={(value) =>
-                            setItems(
-                              items.map((i) =>
-                                i.id === item.id ? { ...i, unit: value } : i
-                              )
-                            )
-                          }
-                        >
-                          <SelectTrigger className="bg-transparent border-0 h-8 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm" side="top">
-                            <SelectValue placeholder="Select" className="text-gray-700" />
-                          </SelectTrigger>
-                          <SelectContent side="top" className="z-50">
-                            <SelectItem value="none" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">Select</SelectItem>
-                            <SelectItem value="NONE" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">NONE</SelectItem>
-                            <SelectItem value="PCS" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">PCS</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                        <Input
-                          type="number"
-                          step="any"
-                          min="0"
-                          className="bg-transparent border-0 p-0 h-8 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm"
-                          value={item.price}
-                          onChange={(e) =>
-                            setItems(
-                              items.map((i) =>
-                                i.id === item.id ? { ...i, price: e.target.value } : i
-                              )
-                            )
-                          }
-                        />
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                        <Select
-                          value={item.tax}
-                          onValueChange={(value) =>
-                            setItems(
-                              items.map((i) =>
-                                i.id === item.id ? { ...i, tax: value } : i
-                              )
-                            )
-                          }
-                        >
-                          <SelectTrigger className="bg-transparent border-0 h-8 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm" side="top">
-                            <SelectValue placeholder="Select" className="text-gray-700" />
-                          </SelectTrigger>
-                          <SelectContent side="top" className="z-50">
-                            <SelectItem value="none" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">Select</SelectItem>
-                            <SelectItem value="NONE" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">NONE</SelectItem>
-                            <SelectItem value="GST@18%" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">GST@18%</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{calculateTotal(item).toFixed(2)}</td>
-                    </tr>
+      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6 text-center">
+          Create Sale Invoice
+        </h1>
+
+        {/* Customer and Invoice Details */}
+        <div className="grid gap-6 md:grid-cols-2 mb-8">
+          <div className="space-y-4">
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">Customer *</FormLabel>
+              <Select
+                value={selectedParty ? selectedParty.id.toString() : ""}
+                onValueChange={(value) => {
+                  if (value === "add") setShowAddPartyModal(true);
+                  else {
+                    const party = parties.find((p) => p.id.toString() === value);
+                    setSelectedParty(party);
+                    setPhone(party.phone || "");
+                    setBillingAddress(party.billingAddress || "");
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-10 sm:h-12">
+                  <SelectValue placeholder="Select Party" />
+                </SelectTrigger>
+                <SelectContent side="top" className="z-50">
+                  <SelectItem value="add">+ Add Party</SelectItem>
+                  {parties.map((party) => (
+                    <SelectItem key={party.id} value={party.id.toString()}>
+                      {party.name}
+                    </SelectItem>
                   ))}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colSpan={8} className="px-3 py-3">
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="text-indigo-600 hover:text-indigo-700 p-0 h-auto font-medium"
-                        onClick={addItem}
-                      >
-                        ADD ROW
-                      </Button>
-                    </td>
-                  </tr>
-                  <tr className="border-t border-gray-200">
-                    <td colSpan={3} className="px-3 py-3 text-sm font-medium text-gray-900">TOTAL</td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{totalQuantity}</td>
-                    <td colSpan={3} className="px-3 py-3 text-right text-sm font-medium text-gray-900">{totalTax.toFixed(2)}</td>
-                    <td className="px-3 py-3 text-sm font-medium text-gray-900">{grandTotal.toFixed(2)}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+                </SelectContent>
+              </Select>
+            </FormItem>
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">Phone Number</FormLabel>
+              <Input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Enter phone number"
+                className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-10 sm:h-12"
+              />
+            </FormItem>
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">Billing Address</FormLabel>
+              <Textarea
+                value={billingAddress}
+                onChange={(e) => setBillingAddress(e.target.value)}
+                placeholder="Enter billing address"
+                className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 min-h-[80px]"
+              />
+            </FormItem>
           </div>
-          <div className="mt-8 flex justify-between flex-col sm:flex-row gap-6">
-            <div className="space-y-4">
-              <div>
-                <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Payment Type</FormLabel>
-                <Select value={paymentType} onValueChange={setPaymentType}>
-                  <SelectTrigger className="w-full sm:w-[200px] rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" side="top">
-                    <SelectValue placeholder="Select Payment Type" className="text-gray-700" />
-                  </SelectTrigger>
-                  <SelectContent side="top" className="z-50">
-                    <SelectItem value="cash" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">Cash</SelectItem>
-                    <SelectItem value="cheque" className="text-gray-700 hover:bg-gray-100 focus:bg-gray-100">Cheque</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {paymentType === "cheque" && (
-                <FormItem>
-                  <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Cheque Reference Number</FormLabel>
-                  <Input
-                    type="text"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Enter reference number"
-                    value={chequeRef}
-                    onChange={(e) => setChequeRef(e.target.value)}
-                  />
-                </FormItem>
-              )}
-              <Button variant="link" className="text-indigo-600 hover:text-indigo-700 p-0 h-auto font-medium">
-                + Add Payment type
-              </Button>
-              <div className="flex flex-col gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-indigo-600 hover:text-indigo-700 p-0 h-auto font-medium rounded-md shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                  onClick={() => setShowDescription(!showDescription)}
-                >
-                  <FileText className="h-4 w-4 mr-1" />
-                  ADD DESCRIPTION
-                </Button>
-                {showDescription && (
-                  <Textarea
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Enter description here..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={2}
-                  />
-                )}
-              </div>
-            </div>
-            <div className="space-y-4 min-w-[200px] self-end">
-              <div className="flex items-center justify-between gap-4">
-                <label className="text-sm font-medium text-gray-700">Total</label>
-                <Input type="number" className="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-right" value={grandTotal.toFixed(2)} readOnly />
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <label className="text-sm font-medium text-gray-700">Received</label>
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <FormItem className="flex-1">
+                <FormLabel className="text-sm font-medium text-gray-700">Invoice Number</FormLabel>
                 <Input
                   type="number"
-                  className="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-right"
-                  value={received}
-                  onChange={(e) => setReceived(Number(e.target.value))}
+                  value={invoiceNumber}
+                  onChange={(e) => setInvoiceNumber(Number(e.target.value))}
+                  className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-10 sm:h-12"
                 />
+              </FormItem>
+              <FormItem className="flex-1">
+                <FormLabel className="text-sm font-medium text-gray-700">Invoice Date</FormLabel>
+                <Input
+                  type="date"
+                  value={invoiceDate}
+                  onChange={(e) => setInvoiceDate(e.target.value)}
+                  className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-10 sm:h-12"
+                />
+              </FormItem>
+            </div>
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">State of Supply</FormLabel>
+              <Select value={stateOfSupply} onValueChange={setStateOfSupply}>
+                <SelectTrigger className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-10 sm:h-12">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent side="top" className="z-50">
+                  <SelectItem value="none">None</SelectItem>
+                  {indianStates.map((state) => (
+                    <SelectItem key={state} value={state}>
+                      {state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
+          </div>
+        </div>
+
+        {/* Add Party Modal */}
+        {showAddPartyModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-white p-6 w-full max-w-md sm:max-w-lg rounded-lg shadow-xl md:w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-800">Add Party</h3>
+                <button onClick={() => setShowAddPartyModal(false)}>
+                  <X className="h-5 w-5 text-gray-500 hover:text-gray-700" />
+                </button>
               </div>
-              <div className="flex items-center justify-between gap-4 pt-2 border-t border-gray-200">
-                <label className="text-sm font-semibold text-gray-800">Balance</label>
-                <span className="text-sm font-semibold text-gray-800">{(grandTotal - received).toFixed(2)}</span>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormItem className="col-span-full">
+                  <FormLabel className="text-sm font-medium text-gray-700">Party Name *</FormLabel>
+                  <Input
+                    type="text"
+                    value={partyName}
+                    onChange={(e) => setPartyName(e.target.value)}
+                    placeholder="Enter party name"
+                    className="h-10 sm:h-12"
+                  />
+                </FormItem>
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">GSTIN</FormLabel>
+                  <Input
+                    type="text"
+                    value={partyGSTIN}
+                    onChange={handleGSTINChange}
+                    placeholder="Enter GSTIN"
+                    className="h-10 sm:h-12"
+                  />
+                </FormItem>
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">Phone Number</FormLabel>
+                  <Input
+                    type="text"
+                    value={partyPhone}
+                    onChange={(e) => setPartyPhone(e.target.value)}
+                    placeholder="Enter phone number"
+                    className="h-10 sm:h-12"
+                  />
+                </FormItem>
+                <FormItem className="col-span-full">
+                  <FormLabel className="text-sm font-medium text-gray-700">Billing Address</FormLabel>
+                  <Textarea
+                    value={partyBillingAddress}
+                    onChange={(e) => setPartyBillingAddress(e.target.value)}
+                    placeholder="Enter billing address"
+                    className="min-h-[80px]"
+                  />
+                </FormItem>
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">State</FormLabel>
+                  <Select value={partyState} onValueChange={setPartyState}>
+                    <SelectTrigger className="h-10 sm:h-12">
+                      <SelectValue placeholder="Select State" />
+                    </SelectTrigger>
+                    <SelectContent side="top" className="z-50">
+                      {indianStates.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-gray-700">GST Type</FormLabel>
+                  <Select value={partyGSTType} onValueChange={setPartyGSTType}>
+                    <SelectTrigger className="h-10 sm:h-12">
+                      <SelectValue placeholder="Select GST Type" />
+                    </SelectTrigger>
+                    <SelectContent side="top" className="z-50">
+                      <SelectItem value="Unregistered/Consumer">Unregistered/Consumer</SelectItem>
+                      <SelectItem value="Registered Business - Regular">Registered Business - Regular</SelectItem>
+                      <SelectItem value="Registered Business - Composition">Registered Business - Composition</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+                <FormItem className="col-span-full">
+                  <FormLabel className="text-sm font-medium text-gray-700">Email ID</FormLabel>
+                  <Input
+                    type="email"
+                    value={partyEmail}
+                    onChange={(e) => setPartyEmail(e.target.value)}
+                    placeholder="Enter Email ID"
+                    className="h-10 sm:h-12"
+                  />
+                </FormItem>
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <Button variant="secondary" onClick={() => setShowAddPartyModal(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSavePartyAndNew}>Save & New</Button>
+                <Button onClick={handleAddParty}>Save</Button>
               </div>
             </div>
           </div>
-          <div className="mt-8 flex justify-end gap-3">
-            <Button variant="outline" onClick={handleShare}>Share</Button>
-            <Button onClick={handleSave}>Save</Button>
+        )}
+
+        {/* Items Section */}
+        <div className="mb-8">
+          {/* Desktop Table */}
+          <div className="hidden md:block shadow overflow-hidden border border-gray-200 rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">#</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Item</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">HSN Code</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Qty</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Unit</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Price/Unit</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Tax</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {items.map((item, index) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-3 py-2 text-sm text-gray-900 flex items-center space-x-2">
+                      <span>{index + 1}</span>
+                      <button onClick={() => handleDeleteRow(item.id)} className="text-red-500 hover:text-red-700">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                    <td className="px-3 py-2 text-sm">
+                      <Input
+                        value={item.name}
+                        onChange={(e) =>
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, name: e.target.value } : i)))
+                        }
+                        className="border-0 h-10 focus:ring-indigo-500"
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-sm">
+                      <Input
+                        value={item.hsn}
+                        onChange={(e) =>
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, hsn: e.target.value } : i)))
+                        }
+                        className="border-0 h-10 focus:ring-indigo-500"
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-sm">
+                      <Input
+                        type="number"
+                        value={item.qty}
+                        onChange={(e) =>
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, qty: e.target.value } : i)))
+                        }
+                        className="border-0 h-10 w-16 focus:ring-indigo-500"
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-sm">
+                      <Select
+                        value={item.unit}
+                        onValueChange={(value) =>
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, unit: value } : i)))
+                        }
+                      >
+                        <SelectTrigger className="border-0 h-10 focus:ring-indigo-500">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent side="top" className="z-50">
+                          <SelectItem value="none">Select</SelectItem>
+                          <SelectItem value="NONE">NONE</SelectItem>
+                          <SelectItem value="PCS">PCS</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-3 py-2 text-sm">
+                      <Input
+                        type="number"
+                        value={item.price}
+                        onChange={(e) =>
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, price: e.target.value } : i)))
+                        }
+                        className="border-0 h-10 focus:ring-indigo-500"
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-sm">
+                      <Select
+                        value={item.tax}
+                        onValueChange={(value) =>
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, tax: value } : i)))
+                        }
+                      >
+                        <SelectTrigger className="border-0 h-10 focus:ring-indigo-500">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent side="top" className="z-50">
+                          <SelectItem value="none">Select</SelectItem>
+                          <SelectItem value="NONE">NONE</SelectItem>
+                          <SelectItem value="GST@18%">GST@18%</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-3 py-2 text-sm text-gray-900">{calculateTotal(item).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-4">
+            {items.map((item, index) => (
+              <div key={item.id} className="border rounded-lg p-4 bg-white shadow-sm">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium text-gray-700">Item {index + 1}</span>
+                  <button onClick={() => handleDeleteRow(item.id)} className="text-red-500 hover:text-red-700">
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="grid gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Item</label>
+                    <Input
+                      value={item.name}
+                      onChange={(e) =>
+                        setItems(items.map((i) => (i.id === item.id ? { ...i, name: e.target.value } : i)))
+                      }
+                      className="h-12"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">HSN Code</label>
+                    <Input
+                      value={item.hsn}
+                      onChange={(e) =>
+                        setItems(items.map((i) => (i.id === item.id ? { ...i, hsn: e.target.value } : i)))
+                      }
+                      className="h-12"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-medium text-gray-600">Qty</label>
+                      <Input
+                        type="number"
+                        value={item.qty}
+                        onChange={(e) =>
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, qty: e.target.value } : i)))
+                        }
+                        className="h-12"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600">Unit</label>
+                      <Select
+                        value={item.unit}
+                        onValueChange={(value) =>
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, unit: value } : i)))
+                        }
+                      >
+                        <SelectTrigger className="h-12">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent side="top" className="z-50">
+                          <SelectItem value="none">Select</SelectItem>
+                          <SelectItem value="NONE">NONE</SelectItem>
+                          <SelectItem value="PCS">PCS</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Price/Unit</label>
+                    <Input
+                      type="number"
+                      value={item.price}
+                      onChange={(e) =>
+                        setItems(items.map((i) => (i.id === item.id ? { ...i, price: e.target.value } : i)))
+                      }
+                      className="h-12"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Tax</label>
+                    <Select
+                      value={item.tax}
+                      onValueChange={(value) =>
+                        setItems(items.map((i) => (i.id === item.id ? { ...i, tax: value } : i)))
+                      }
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent side="top" className="z-50">
+                        <SelectItem value="none">Select</SelectItem>
+                        <SelectItem value="NONE">NONE</SelectItem>
+                        <SelectItem value="GST@18%">GST@18%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium text-gray-600">Total</span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {calculateTotal(item).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Add Item Button */}
+          <Button
+            variant="link"
+            onClick={addItem}
+            className="mt-4 text-indigo-600 hover:text-indigo-700 md:hidden"
+          >
+            + Add Item
+          </Button>
+          <Button
+            onClick={addItem}
+            className="hidden md:block mt-4 bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            Add Item
+          </Button>
+
+          {/* Floating Add Item Button on Mobile */}
+          <Button
+            onClick={addItem}
+            className="fixed bottom-20 right-4 md:hidden bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-3 shadow-lg"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
+
+        {/* Payment and Totals */}
+        <div className="flex flex-col md:flex-row justify-between gap-6 mb-8">
+          <div className="space-y-4">
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">Payment Type</FormLabel>
+              <Select value={paymentType} onValueChange={setPaymentType}>
+                <SelectTrigger className="w-full md:w-[200px] h-10 sm:h-12">
+                  <SelectValue placeholder="Select Payment Type" />
+                </SelectTrigger>
+                <SelectContent side="top" className="z-50">
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
+            {paymentType === "cheque" && (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-700">Cheque Reference</FormLabel>
+                <Input
+                  type="text"
+                  value={chequeRef}
+                  onChange={(e) => setChequeRef(e.target.value)}
+                  placeholder="Enter reference number"
+                  className="h-10 sm:h-12"
+                />
+              </FormItem>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => setShowDescription(!showDescription)}
+              className="flex items-center"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              {showDescription ? "Hide Description" : "Add Description"}
+            </Button>
+            {showDescription && (
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter description here..."
+                className="min-h-[80px]"
+              />
+            )}
+          </div>
+          <div className="space-y-4 min-w-[200px]">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-700">Total Qty</span>
+              <span className="text-sm text-gray-900">{totalQuantity}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-700">Tax</span>
+              <span className="text-sm text-gray-900">{totalTax.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-700">Total</span>
+              <span className="text-sm text-gray-900">{grandTotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium text-gray-700">Received</label>
+              <Input
+                type="number"
+                value={received}
+                onChange={(e) => setReceived(Number(e.target.value))}
+                className="w-24 h-10 sm:h-12 text-right"
+              />
+            </div>
+            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+              <span className="text-sm font-semibold text-gray-800">Balance</span>
+              <span className="text-sm font-semibold text-gray-800">
+                {(grandTotal - received).toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Fixed Bottom Bar on Mobile */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200 flex justify-end gap-3 md:static md:p-0 md:border-0">
+          <Button variant="outline" onClick={handleShare} className="h-10 sm:h-12 px-6">
+            Share
+          </Button>
+          <Button onClick={handleSave} className="h-10 sm:h-12 px-6">
+            Save
+          </Button>
         </div>
       </div>
     </div>
