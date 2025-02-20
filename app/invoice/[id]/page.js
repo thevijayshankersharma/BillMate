@@ -3,6 +3,12 @@
 import { formatCurrency, numberToWords } from "../../lib/utils";
 import { useEffect, useState } from "react";
 
+// Helper function to format state name (Initial Capital, lowercase rest)
+const formatStateName = (stateName) => {
+    if (!stateName) return "";
+    return stateName.charAt(0).toUpperCase() + stateName.slice(1).toLowerCase();
+};
+
 // Function to format address to two lines with character limit
 const formatAddress = (address) => {
     if (!address) return "";
@@ -85,11 +91,62 @@ export default function InvoicePage() {
     const customerGSTIN = invoice.customer.gstin?.trim() || "";
     const customerState = invoice.customer.state?.trim() || "";
 
+    // GSTIN State Code Map
+    const stateCodeMap = {
+        "JAMMU AND KASHMIR": "01",
+        "HIMACHAL PRADESH": "02",
+        "PUNJAB": "03",
+        "CHANDIGARH": "04",
+        "UTTARAKHAND": "05",
+        "HARYANA": "06",
+        "DELHI": "07",
+        "RAJASTHAN": "08",
+        "UTTAR PRADESH": "09",
+        "BIHAR": "10",
+        "SIKKIM": "11",
+        "ARUNACHAL PRADESH": "12",
+        "NAGALAND": "13",
+        "MANIPUR": "14",
+        "MIZORAM": "15",
+        "TRIPURA": "16",
+        "MEGHALAYA": "17",
+        "ASSAM": "18",
+        "WEST BENGAL": "19",
+        "JHARKHAND": "20",
+        "ODISHA": "21",
+        "CHATTISGARH": "22",
+        "MADHYA PRADESH": "23",
+        "GUJARAT": "24",
+        "DADRA AND NAGAR HAVELI AND DAMAN AND DIU": "26",
+        "MAHARASHTRA": "27",
+        "ANDHRA PRADESH": "28",
+        "KARNATAKA": "29",
+        "GOA": "30",
+        "LAKSHADWEEP": "31",
+        "KERALA": "32",
+        "TAMIL NADU": "33",
+        "PUDUCHERRY": "34",
+        "ANDAMAN AND NICOBAR ISLANDS": "35",
+        "TELANGANA": "36",
+        "LADAKH": "38",
+        "ANDHRA PRADESH (NEW)": "37" // As per statesMap in profile page, assuming this is for 37 state code.
+    };
+
+
+    // Function to format state display (with GSTIN prefix based on selected state)
+    const formatStateDisplay = (state) => {
+        const formattedState = formatStateName(state); // Format state name
+        const stateCode = stateCodeMap[state?.toUpperCase()]; // Look up state code, handle undefined state
+        if (stateCode) {
+            return `${stateCode}-${formattedState}`; // Prefix with state code if found
+        }
+        return formattedState; // Just return formatted state if code not found (or no state selected)
+    };
+
+
     // Compute "Place of Supply" using customer's GSTIN and state if available
-    const placeOfSupply =
-        customerGSTIN && customerGSTIN.length >= 2 && customerState
-            ? `${customerGSTIN.substring(0, 2)}-${customerState}`
-            : invoice.stateOfSupply;
+    const placeOfSupply = formatStateDisplay(invoice.stateOfSupply);
+
 
     // Helper function to calculate GST amount for an item
     const calculateGSTAmount = (item) => {
@@ -110,7 +167,7 @@ export default function InvoicePage() {
                             {profile.phone && <p className="text-sm text-gray-600 mt-1">Phone no. : {profile.phone}</p>}
                             {profile.email && <p className="text-sm text-gray-600 mt-1">Email : {profile.email}</p>}
                             {profile.gstin && <p className="text-sm text-gray-600 mt-1">GSTIN : {profile.gstin}</p>}
-                            {profile.state && <p className="text-sm text-gray-600 mt-1">State : {profile.state}</p>}
+                            {profile.state && <p className="text-sm text-gray-600 mt-1">State : {formatStateDisplay(profile.state)}</p>} {/* Display formatted state in header */}
                         </div>
                         <div className="w-20 h-20 rounded-md flex items-center justify-center shadow-sm overflow-hidden">
                             {profile.logoUrl ? (
@@ -139,10 +196,7 @@ export default function InvoicePage() {
                             )}
                             {customerState && (
                                 <p className="text-sm text-gray-600 mt-1">
-                                    State:{" "}
-                                    {customerGSTIN.length >= 2
-                                        ? `${customerGSTIN.substring(0, 2)}-${customerState}`
-                                        : customerState}
+                                    State: {formatStateDisplay(customerState)} {/* Display formatted customer state */}
                                 </p>
                             )}
                         </div>
