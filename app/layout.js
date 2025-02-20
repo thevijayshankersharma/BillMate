@@ -16,39 +16,30 @@ export default function RootLayout({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Read localStorage only on the client
     const storedLoginStatus = localStorage.getItem('isLoggedIn');
     const loggedIn = storedLoginStatus === 'true';
     setIsLoggedIn(loggedIn);
-    console.log({ pathname, isLoggedIn: loggedIn });
-
-    // If user is not logged in and is accessing invoice form, redirect to /login
-    if (!loggedIn && pathname.startsWith('/invoice-form')) {
-      router.push('/login');
-    }
   }, [pathname, router]);
 
-  const shouldShowHeader = pathname !== '/' && pathname !== '/login'; // <----- Condition for showing HEADER (not just Nav)
+  const shouldShowHeader = pathname !== '/' && pathname !== '/login' && pathname !== '/register';
 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-geist`}>
-        {shouldShowHeader && ( // <----- CONDITIONALLY RENDER ENTIRE <header>
+        {shouldShowHeader && (
           <header className="sticky top-0 z-50 w-full bg-white shadow-md">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-              {/* Brand/Logo Link (you can customize this) */}
               <Link href="/" className="flex items-center gap-2 font-semibold">
-                {/* You can add your logo here, e.g., <FileText className="h-5 w-5" /> */}
                 <span>BillMate</span>
               </Link>
-              <MainNav /> {/* MainNav Component */}
+              <MainNav />
             </div>
           </header>
-        )} {/* <----- Closing curly brace for conditional <header> rendering */}
+        )}
         <main className="flex-1">
           {children}
         </main>
-        <footer className="w-full border-t border-gray-200 py-4 bg-white text-center text-sm text-gray-500">  {/* Basic footer */}
+        <footer className="w-full border-t border-gray-200 py-4 bg-white text-center text-sm text-gray-500">
           © {new Date().getFullYear()} BillMate. All rights reserved.
         </footer>
       </body>

@@ -15,12 +15,10 @@ import {
 import { Textarea } from "../components/ui/textarea";
 import { useRouter } from "next/navigation";
 
-// GSTIN parser used for lookup only (it does not alter the original input)
 function parseGSTIN(gstin) {
   if (!gstin) {
     return { state: "", gstType: "Unregistered/Consumer" };
   }
-  // For lookup purposes, if only one digit is entered, pad with a zero.
   let stateCode = gstin.length >= 2 ? gstin.substring(0, 2) : "0" + gstin;
   const statesMap = {
     "01": "JAMMU AND KASHMIR",
@@ -66,46 +64,41 @@ function parseGSTIN(gstin) {
   return { state, gstType };
 }
 
-// ========================================================
-// IMPORTANT: Changed `export function` to `export default function`
-// ========================================================
 export default function InvoiceForm() {
   const router = useRouter();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Invoice details state
+  useEffect(() => {
+    const storedLoginStatus = localStorage.getItem('isLoggedIn');
+    const isLoggedIn = storedLoginStatus === 'true';
+
+    if (!isLoggedIn) {
+      console.log("InvoiceFormPage: User not logged in, redirecting to /login");
+      router.push('/login');
+    }
+    setIsCheckingAuth(false);
+  }, [router]);
+
   const [invoiceNumber, setInvoiceNumber] = useState(1);
   const [invoiceDate, setInvoiceDate] = useState(
     new Date().toISOString().substring(0, 10)
   );
-  // Customer details
   const [customer, setCustomer] = useState("");
   const [billingAddress, setBillingAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [stateOfSupply, setStateOfSupply] = useState("none");
-
-  // Payment type state
   const [paymentType, setPaymentType] = useState("cash");
   const [chequeRef, setChequeRef] = useState("");
-
-  // Items state: two empty rows by default
   const [items, setItems] = useState([
     { id: 1, name: "", hsn: "", qty: "", unit: "none", price: "", tax: "none", total: 0 },
     { id: 2, name: "", hsn: "", qty: "", unit: "none", price: "", tax: "none", total: 0 },
   ]);
-
-  // Description state
   const [showDescription, setShowDescription] = useState(false);
   const [description, setDescription] = useState("");
-
-  // Received amount (for dynamic balance calculation)
   const [received, setReceived] = useState(0);
-
-  // --- Party (Customer) Management ---
   const [parties, setParties] = useState([]);
   const [selectedParty, setSelectedParty] = useState(null);
   const [showAddPartyModal, setShowAddPartyModal] = useState(false);
-
-  // Party form fields
   const [partyName, setPartyName] = useState("");
   const [partyGSTIN, setPartyGSTIN] = useState("");
   const [partyPhone, setPartyPhone] = useState("");
@@ -114,8 +107,6 @@ export default function InvoiceForm() {
   const [partyGSTType, setPartyGSTType] = useState("");
   const [partyEmail, setPartyEmail] = useState("");
 
-  // --- Persist Parties ---
-  // On mount, load any previously saved parties from localStorage.
   useEffect(() => {
     const storedParties = localStorage.getItem("parties");
     if (storedParties) {
@@ -123,12 +114,10 @@ export default function InvoiceForm() {
     }
   }, []);
 
-  // Whenever parties change, save them to localStorage.
   useEffect(() => {
     localStorage.setItem("parties", JSON.stringify(parties));
   }, [parties]);
 
-  // Update GSTIN lookup as user types (for party fields only)
   const handleGSTINChange = (e) => {
     const gstin = e.target.value;
     setPartyGSTIN(gstin);
@@ -145,7 +134,7 @@ export default function InvoiceForm() {
     const newParty = {
       id: parties.length + 1,
       name: partyName,
-      gstin: partyGSTIN, // Save the GSTIN as entered (without padding)
+      gstin: partyGSTIN,
       phone: partyPhone,
       billingAddress: partyBillingAddress,
       state: partyState,
@@ -154,11 +143,9 @@ export default function InvoiceForm() {
     };
     setParties([...parties, newParty]);
     setSelectedParty(newParty);
-    // Update main form fields with party details
     setPhone(newParty.phone || "");
     setBillingAddress(newParty.billingAddress || "");
     setShowAddPartyModal(false);
-    // Clear party fields
     setPartyName("");
     setPartyGSTIN("");
     setPartyPhone("");
@@ -185,10 +172,8 @@ export default function InvoiceForm() {
     };
     setParties([...parties, newParty]);
     setSelectedParty(newParty);
-    // Update main form fields with party details
     setPhone(newParty.phone || "");
     setBillingAddress(newParty.billingAddress || "");
-    // Clear fields but keep modal open for adding another party
     setPartyName("");
     setPartyGSTIN("");
     setPartyPhone("");
@@ -198,7 +183,6 @@ export default function InvoiceForm() {
     setPartyEmail("");
   };
 
-  // --- Existing Functions ---
   const addItem = () => {
     setItems([
       ...items,
@@ -287,7 +271,6 @@ export default function InvoiceForm() {
     setReceived(0);
   };
 
-  // Modified handleShare: include GSTIN, state, received and dynamically calculate balance.
   const handleShare = () => {
     const baseTotal = items.reduce(
       (acc, item) => acc + ((parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0)),
@@ -353,9 +336,12 @@ export default function InvoiceForm() {
     router.push("/invoice/1");
   };
 
+  if (isCheckingAuth) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-6 sm:py-12">
-      {/* Global styles */}
       <style jsx global>{`
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button {
@@ -369,9 +355,7 @@ export default function InvoiceForm() {
       <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden md:max-w-4xl lg:max-w-5xl xl:max-w-6xl">
         <div className="px-4 py-5 sm:p-6">
           <h1 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Create Sale Invoice</h1>
-
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Left Section: Customer & Contact Details */}
             <div className="space-y-4">
               <FormItem>
                 <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Customer *</FormLabel>
@@ -383,7 +367,6 @@ export default function InvoiceForm() {
                     } else {
                       const party = parties.find((p) => p.id.toString() === value);
                       setSelectedParty(party);
-                      // Update main form fields with party details
                       setPhone(party.phone || "");
                       setBillingAddress(party.billingAddress || "");
                     }
@@ -419,12 +402,10 @@ export default function InvoiceForm() {
                   value={billingAddress}
                   onChange={(e) => setBillingAddress(e.target.value)}
                   placeholder="Enter billing address"
-                  rows={3} // Added rows for better default height
+                  rows={3}
                 />
               </FormItem>
             </div>
-
-            {/* Right Section: Invoice Details */}
             <div className="space-y-4">
               <div className="flex justify-between gap-4">
                 <FormItem className="w-1/2">
@@ -466,12 +447,8 @@ export default function InvoiceForm() {
               </FormItem>
             </div>
           </div>
-
-          {/* Party Modal */}
           {showAddPartyModal && (
-            <div className="fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out"
-                 style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} // Semi-transparent overlay using inline style for animation
-            >
+            <div className="fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
               <div className="bg-white p-6 z-10 w-full max-w-md rounded-lg shadow-xl transform transition-transform duration-300 ease-in-out">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-bold text-gray-800">Add Party</h3>
@@ -479,11 +456,11 @@ export default function InvoiceForm() {
                     onClick={() => setShowAddPartyModal(false)}
                     className="text-gray-500 hover:text-gray-700 focus:outline-none"
                   >
-                    <X className="h-5 w-5" /> {/* Using X icon from lucide-react */}
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"> {/* Responsive grid for modal fields */}
-                  <div className="col-span-full"> {/* Full width on small screens */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="col-span-full">
                     <FormItem>
                       <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Party Name *</FormLabel>
                       <Input
@@ -519,7 +496,7 @@ export default function InvoiceForm() {
                       />
                     </FormItem>
                   </div>
-                  <div className="col-span-full"> {/* Full width on small screens */}
+                  <div className="col-span-full">
                     <FormItem>
                       <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Billing Address</FormLabel>
                       <Textarea
@@ -527,7 +504,7 @@ export default function InvoiceForm() {
                         onChange={(e) => setPartyBillingAddress(e.target.value)}
                         placeholder="Enter billing address"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        rows={2} // Adjusted rows for modal
+                        rows={2}
                       />
                     </FormItem>
                   </div>
@@ -569,7 +546,7 @@ export default function InvoiceForm() {
                       </Select>
                     </FormItem>
                   </div>
-                  <div className="col-span-full"> {/* Full width on small screens */}
+                  <div className="col-span-full">
                     <FormItem>
                       <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Email ID</FormLabel>
                       <Input
@@ -590,8 +567,6 @@ export default function InvoiceForm() {
               </div>
             </div>
           )}
-
-          {/* Items Table */}
           <div className="mt-8">
             <div className="shadow overflow-hidden border border-gray-200 sm:rounded-lg">
               <table className="min-w-full divide-y divide-gray-200">
@@ -603,7 +578,7 @@ export default function InvoiceForm() {
                     <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">QTY</th>
                     <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UNIT</th>
                     <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <span >PRICE/UNIT</span>
+                      <span>PRICE/UNIT</span>
                       <Select defaultValue="without">
                         <SelectTrigger className="ml-1 inline-block h-8 text-xs bg-white border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" side="top">
                           <SelectValue className="text-gray-700">Without Tax</SelectValue>
@@ -756,9 +731,7 @@ export default function InvoiceForm() {
               </table>
             </div>
           </div>
-
-          {/* Payment Section */}
-          <div className="mt-8 flex justify-between flex-col sm:flex-row gap-6"> {/* Responsive layout for payment section */}
+          <div className="mt-8 flex justify-between flex-col sm:flex-row gap-6">
             <div className="space-y-4">
               <div>
                 <FormLabel className="block text-sm font-medium text-gray-700 mb-1">Payment Type</FormLabel>
@@ -803,14 +776,12 @@ export default function InvoiceForm() {
                     placeholder="Enter description here..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    rows={2} // Adjusted rows for description
+                    rows={2}
                   />
                 )}
               </div>
             </div>
-
-            {/* Totals Section (No Round Off; dynamic Received/Balance) */}
-            <div className="space-y-4 min-w-[200px] self-end"> {/* Aligned to the end in flex container */}
+            <div className="space-y-4 min-w-[200px] self-end">
               <div className="flex items-center justify-between gap-4">
                 <label className="text-sm font-medium text-gray-700">Total</label>
                 <Input type="number" className="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-right" value={grandTotal.toFixed(2)} readOnly />
@@ -830,8 +801,6 @@ export default function InvoiceForm() {
               </div>
             </div>
           </div>
-
-          {/* Action Buttons */}
           <div className="mt-8 flex justify-end gap-3">
             <Button variant="outline" onClick={handleShare}>Share</Button>
             <Button onClick={handleSave}>Save</Button>
