@@ -1,24 +1,34 @@
+// api/auth/login/route.js
 import { NextResponse } from 'next/server';
+import clientPromise from '../../../lib/mongodb'; // Adjust path if needed
+import bcrypt from 'bcryptjs'; // Import bcryptjs
 
 export async function POST(request) {
     try {
         const { email, password } = await request.json();
 
-        const hardcodedEmail = process.env.HARDCODED_EMAIL;
-        const hardcodedPassword = process.env.HARDCODED_PASSWORD;
-
-        if (!hardcodedEmail || !hardcodedPassword) {
-            console.error("Environment variables HARDCODED_EMAIL or HARDCODED_PASSWORD not set.");
-            return NextResponse.json({ message: "Login configuration error." }, { status: 500 });
+        if (!email || !password) {
+            return NextResponse.json({ message: "Email and password are required." }, { status: 400 });
         }
 
-        if (email === hardcodedEmail && password === hardcodedPassword) {
-            // Hardcoded login successful
-            return NextResponse.json({ message: "Login successful" }, { status: 200 });
-        } else {
-            // Invalid credentials
-            return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
+        const mongoClient = await clientPromise;
+        const db = mongoClient.db();
+        const usersCollection = db.collection('users');
+
+        const user = await usersCollection.findOne({ email });
+
+        if (!user) {
+            return NextResponse.json({ message: "Invalid credentials" }, { status: 401 }); // User not found
         }
+
+        const passwordMatch = await bcrypt.compare(password, user.password);
+
+        if (!passwordMatch) {
+            return NextResponse.json({ message: "Invalid credentials" }, { status: 401 }); // Password mismatch
+        }
+
+        // Login successful
+        return NextResponse.json({ message: "Login successful", userEmail: user.email }, { status: 200 });
 
     } catch (error) {
         console.error("Login error:", error);
