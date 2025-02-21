@@ -361,6 +361,7 @@ export default function InvoiceForm() {
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(Number(e.target.value))}
                   className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-10 sm:h-12"
+                  min="0" // Prevent negative values
                 />
               </FormItem>
               <FormItem className="flex-1">
@@ -563,9 +564,10 @@ export default function InvoiceForm() {
                         type="number"
                         value={item.qty}
                         onChange={(e) =>
-                          setItems(items.map((i) => (i.id === item.id ? { ...i, qty: e.target.value } : i)))
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, qty: Math.max(0, e.target.value) } : i))) // Ensure qty is not negative
                         }
                         className="border-0 h-10 w-16 focus:ring-indigo-500"
+                        min="0" // Prevent negative values
                       />
                     </td>
                     <td className="px-3 py-2 text-sm">
@@ -590,9 +592,10 @@ export default function InvoiceForm() {
                         type="number"
                         value={item.price}
                         onChange={(e) =>
-                          setItems(items.map((i) => (i.id === item.id ? { ...i, price: e.target.value } : i)))
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, price: Math.max(0, e.target.value) } : i))) // Ensure price is not negative
                         }
                         className="border-0 h-10 focus:ring-indigo-500"
+                        min="0" // Prevent negative values
                       />
                     </td>
                     <td className="px-3 py-2 text-sm">
@@ -664,9 +667,10 @@ export default function InvoiceForm() {
                         type="number"
                         value={item.qty}
                         onChange={(e) =>
-                          setItems(items.map((i) => (i.id === item.id ? { ...i, qty: e.target.value } : i)))
+                          setItems(items.map((i) => (i.id === item.id ? { ...i, qty: Math.max(0, e.target.value) } : i))) // Ensure qty is not negative
                         }
                         className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                        min="0" // Prevent negative values
                       />
                     </div>
                     <div>
@@ -694,9 +698,10 @@ export default function InvoiceForm() {
                       type="number"
                       value={item.price}
                       onChange={(e) =>
-                        setItems(items.map((i) => (i.id === item.id ? { ...i, price: e.target.value } : i)))
-                      }
+                        setItems(items.map((i) => (i.id === item.id ? { ...i, price: Math.max(0, e.target.value) } : i))) // Ensure price is not negative
+                        }
                       className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                      min="0" // Prevent negative values
                     />
                   </div>
                   <div>
@@ -807,8 +812,9 @@ export default function InvoiceForm() {
               <Input
                 type="number"
                 value={received}
-                onChange={(e) => setReceived(Number(e.target.value))}
+                onChange={(e) => setReceived(Math.max(0, Number(e.target.value)))} // Ensure received is not negative
                 className="w-24 h-10 sm:h-12 text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                min="0" // Prevent negative values
               />
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-gray-200">
