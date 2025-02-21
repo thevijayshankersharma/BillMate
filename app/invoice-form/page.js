@@ -74,8 +74,8 @@ export default function InvoiceForm() {
   const [paymentType, setPaymentType] = useState("cash");
   const [chequeRef, setChequeRef] = useState("");
   const [items, setItems] = useState([
-    { id: 1, name: "", hsn: "", qty: "", unit: "none", price: "", tax: "none", total: 0 },
-    { id: 2, name: "", hsn: "", qty: "", unit: "none", price: "", tax: "none", total: 0 },
+    { id: 1, name: "", hsn: "", qty: "", unit: "NONE", price: "", tax: "NONE", total: 0 },
+    { id: 2, name: "", hsn: "", qty: "", unit: "NONE", price: "", tax: "NONE", total: 0 },
   ]);
   const [showDescription, setShowDescription] = useState(false);
   const [description, setDescription] = useState("");
@@ -174,7 +174,7 @@ export default function InvoiceForm() {
   const addItem = () => {
     setItems([
       ...items,
-      { id: items.length + 1, name: "", hsn: "", qty: "", unit: "none", price: "", tax: "none", total: 0 },
+      { id: items.length + 1, name: "", hsn: "", qty: "", unit: "NONE", price: "", tax: "NONE", total: 0 },
     ]);
   };
 
@@ -185,7 +185,16 @@ export default function InvoiceForm() {
   const calculateTotal = (item) => {
     const price = parseFloat(item.price) || 0;
     const qty = parseFloat(item.qty) || 0;
-    const taxRate = item.tax === "GST@18%" ? 0.18 : 0;
+    const taxRate =
+      item.tax === "GST@18%" ? 0.18 :
+      item.tax === "IGST@18%" ? 0.18 :
+      item.tax === "IGST@28%" ? 0.28 :
+      item.tax === "IGST@12%" ? 0.12 :
+      item.tax === "IGST@5%" ? 0.05 :
+      item.tax === "IGST@3%" ? 0.03 :
+      item.tax === "IGST@0.25%" ? 0.0025 :
+      item.tax === "IGST@0%" ? 0 : 0;
+
     const subtotal = price * qty;
     const tax = subtotal * taxRate;
     return subtotal + tax;
@@ -195,7 +204,15 @@ export default function InvoiceForm() {
   const totalTax = items.reduce((acc, item) => {
     const price = parseFloat(item.price) || 0;
     const qty = parseFloat(item.qty) || 0;
-    const taxRate = item.tax === "GST@18%" ? 0.18 : 0;
+    const taxRate =
+      item.tax === "GST@18%" ? 0.18 :
+      item.tax === "IGST@18%" ? 0.18 :
+      item.tax === "IGST@28%" ? 0.28 :
+      item.tax === "IGST@12%" ? 0.12 :
+      item.tax === "IGST@5%" ? 0.05 :
+      item.tax === "IGST@3%" ? 0.03 :
+      item.tax === "IGST@0.25%" ? 0.0025 :
+      item.tax === "IGST@0%" ? 0 : 0;
     return acc + price * qty * taxRate;
   }, 0);
   const grandTotal = items.reduce((acc, item) => acc + calculateTotal(item), 0);
@@ -210,6 +227,45 @@ export default function InvoiceForm() {
     "PUDUCHERRY", "ANDAMAN AND NICOBAR ISLANDS", "TELANGANA", "LADAKH",
   ];
 
+  const units = [
+    "NONE",
+    "BAGS (BAG)",
+    "BOTTLES (BTL)",
+    "BOX (BOX)",
+    "BUNDLES (BDL)",
+    "CANS (CAN)",
+    "CARTONS (CTN)",
+    "DOZENS (DZN)",
+    "GRAMMES (GM)",
+    "KILOGRAMS (KG)",
+    "LITRE (LTR)",
+    "METERS (MTR)",
+    "MILILITRE (ML)",
+    "NUMBERS (NOS)",
+    "PACKS (PAC)",
+    "PAIRS (PRS)",
+    "PIECES (PCS)",
+    "QUINTAL (QTL)",
+    "ROLLS (ROL)",
+    "SQUARE FEET (SQF)",
+    "SQUARE METERS (SQM)",
+    "TABLETS (TBS)",
+  ];
+
+  const taxRates = [
+    "NONE",
+    "IGST@0%",
+    "IGST@0.25%",
+    "IGST@3%",
+    "IGST@5%",
+    "IGST@12%",
+    "IGST@18%",
+    "GST@18%",
+    "IGST@28%",
+    "EXEMPT",
+  ];
+
+
   const handleSave = () => {
     alert("Invoice saved!");
     setInvoiceNumber((prev) => prev + 1);
@@ -220,8 +276,8 @@ export default function InvoiceForm() {
     setPaymentType("cash");
     setChequeRef("");
     setItems([
-      { id: 1, name: "", hsn: "", qty: "", unit: "none", price: "", tax: "none", total: 0 },
-      { id: 2, name: "", hsn: "", qty: "", unit: "none", price: "", tax: "none", total: 0 },
+      { id: 1, name: "", hsn: "", qty: "", unit: "NONE", price: "", tax: "NONE", total: 0 },
+      { id: 2, name: "", hsn: "", qty: "", unit: "NONE", price: "", tax: "NONE", total: 0 },
     ]);
     setInvoiceDate(new Date().toISOString().substring(0, 10));
     setShowDescription(false);
@@ -581,9 +637,10 @@ export default function InvoiceForm() {
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent side="top" className="z-50">
-                          <SelectItem value="none">Select</SelectItem>
                           <SelectItem value="NONE">NONE</SelectItem>
-                          <SelectItem value="PCS">PCS</SelectItem>
+                          {units.filter(unit => unit !== "NONE").map((unit) => (
+                            <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </td>
@@ -609,9 +666,10 @@ export default function InvoiceForm() {
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent side="top" className="z-50">
-                          <SelectItem value="none">Select</SelectItem>
                           <SelectItem value="NONE">NONE</SelectItem>
-                          <SelectItem value="GST@18%">GST@18%</SelectItem>
+                          {taxRates.filter(tax => tax !== "NONE").map((tax) => (
+                            <SelectItem key={tax} value={tax}>{tax}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </td>
@@ -685,9 +743,10 @@ export default function InvoiceForm() {
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent side="top" className="z-50">
-                          <SelectItem value="none">Select</SelectItem>
                           <SelectItem value="NONE">NONE</SelectItem>
-                          <SelectItem value="PCS">PCS</SelectItem>
+                          {units.filter(unit => unit !== "NONE").map((unit) => (
+                            <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -716,9 +775,10 @@ export default function InvoiceForm() {
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent side="top" className="z-50">
-                        <SelectItem value="none">Select</SelectItem>
-                        <SelectItem value="NONE">NONE</SelectItem>
-                        <SelectItem value="GST@18%">GST@18%</SelectItem>
+                         <SelectItem value="NONE">NONE</SelectItem>
+                          {taxRates.filter(tax => tax !== "NONE").map((tax) => (
+                            <SelectItem key={tax} value={tax}>{tax}</SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
