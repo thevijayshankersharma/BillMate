@@ -295,8 +295,9 @@ export default function InvoiceForm() {
           -moz-appearance: textfield;
         }
       `}</style>
-      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden p-4 sm:p-6">
-        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6 text-center">
+
+      <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-2xl p-4 sm:p-8">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8 text-center">
           Create Sale Invoice
         </h1>
 
@@ -346,7 +347,8 @@ export default function InvoiceForm() {
                 value={billingAddress}
                 onChange={(e) => setBillingAddress(e.target.value)}
                 placeholder="Enter billing address"
-                className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 min-h-[80px]"
+                className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-[120px]"
+                style={{ resize: 'none' }} // Disable resize here
               />
             </FormItem>
           </div>
@@ -392,11 +394,14 @@ export default function InvoiceForm() {
 
         {/* Add Party Modal */}
         {showAddPartyModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-            <div className="bg-white p-6 w-full max-w-md sm:max-w-lg rounded-lg shadow-xl md:w-full">
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 transition-opacity duration-300">
+            <div className="bg-white p-6 w-full max-w-md sm:max-w-lg rounded-xl shadow-2xl md:w-full animate-fade-in">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-800">Add Party</h3>
-                <button onClick={() => setShowAddPartyModal(false)}>
+                <button
+                  onClick={() => setShowAddPartyModal(false)}
+                  aria-label="Close modal"
+                >
                   <X className="h-5 w-5 text-gray-500 hover:text-gray-700" />
                 </button>
               </div>
@@ -408,7 +413,7 @@ export default function InvoiceForm() {
                     value={partyName}
                     onChange={(e) => setPartyName(e.target.value)}
                     placeholder="Enter party name"
-                    className="h-10 sm:h-12"
+                    className="h-10 sm:h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </FormItem>
                 <FormItem>
@@ -418,7 +423,7 @@ export default function InvoiceForm() {
                     value={partyGSTIN}
                     onChange={handleGSTINChange}
                     placeholder="Enter GSTIN"
-                    className="h-10 sm:h-12"
+                    className="h-10 sm:h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </FormItem>
                 <FormItem>
@@ -428,7 +433,7 @@ export default function InvoiceForm() {
                     value={partyPhone}
                     onChange={(e) => setPartyPhone(e.target.value)}
                     placeholder="Enter phone number"
-                    className="h-10 sm:h-12"
+                    className="h-10 sm:h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </FormItem>
                 <FormItem className="col-span-full">
@@ -437,13 +442,14 @@ export default function InvoiceForm() {
                     value={partyBillingAddress}
                     onChange={(e) => setPartyBillingAddress(e.target.value)}
                     placeholder="Enter billing address"
-                    className="min-h-[80px]"
+                    className="h-[120px] border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    style={{ resize: 'none' }} // Disable resize here
                   />
                 </FormItem>
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-gray-700">State</FormLabel>
                   <Select value={partyState} onValueChange={setPartyState}>
-                    <SelectTrigger className="h-10 sm:h-12">
+                    <SelectTrigger className="h-10 sm:h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                       <SelectValue placeholder="Select State" />
                     </SelectTrigger>
                     <SelectContent side="top" className="z-50">
@@ -458,7 +464,7 @@ export default function InvoiceForm() {
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-gray-700">GST Type</FormLabel>
                   <Select value={partyGSTType} onValueChange={setPartyGSTType}>
-                    <SelectTrigger className="h-10 sm:h-12">
+                    <SelectTrigger className="h-10 sm:h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                       <SelectValue placeholder="Select GST Type" />
                     </SelectTrigger>
                     <SelectContent side="top" className="z-50">
@@ -475,16 +481,30 @@ export default function InvoiceForm() {
                     value={partyEmail}
                     onChange={(e) => setPartyEmail(e.target.value)}
                     placeholder="Enter Email ID"
-                    className="h-10 sm:h-12"
+                    className="h-10 sm:h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </FormItem>
               </div>
               <div className="mt-6 flex justify-end gap-3">
-                <Button variant="secondary" onClick={() => setShowAddPartyModal(false)}>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowAddPartyModal(false)}
+                  className="h-10 sm:h-12 px-6 transition-transform duration-200 hover:scale-105"
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleSavePartyAndNew}>Save & New</Button>
-                <Button onClick={handleAddParty}>Save</Button>
+                <Button
+                  onClick={handleSavePartyAndNew}
+                  className="h-10 sm:h-12 px-6 bg-indigo-600 hover:bg-indigo-700 transition-transform duration-200 hover:scale-105"
+                >
+                  Save & New
+                </Button>
+                <Button
+                  onClick={handleAddParty}
+                  className="h-10 sm:h-12 px-6 bg-indigo-600 hover:bg-indigo-700 transition-transform duration-200 hover:scale-105"
+                >
+                  Save
+                </Button>
               </div>
             </div>
           </div>
@@ -509,10 +529,14 @@ export default function InvoiceForm() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {items.map((item, index) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
+                  <tr key={item.id} className="hover:bg-gray-100 transition-all duration-200">
                     <td className="px-3 py-2 text-sm text-gray-900 flex items-center space-x-2">
                       <span>{index + 1}</span>
-                      <button onClick={() => handleDeleteRow(item.id)} className="text-red-500 hover:text-red-700">
+                      <button
+                        onClick={() => handleDeleteRow(item.id)}
+                        className="text-red-500 hover:text-red-700 transition-colors duration-200"
+                        aria-label={`Delete item ${index + 1}`}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
@@ -598,10 +622,17 @@ export default function InvoiceForm() {
           {/* Mobile Cards */}
           <div className="md:hidden space-y-4">
             {items.map((item, index) => (
-              <div key={item.id} className="border rounded-lg p-4 bg-white shadow-sm">
+              <div
+                key={item.id}
+                className="border rounded-xl p-4 bg-white shadow-md transition-all duration-300 animate-slide-in"
+              >
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium text-gray-700">Item {index + 1}</span>
-                  <button onClick={() => handleDeleteRow(item.id)} className="text-red-500 hover:text-red-700">
+                  <button
+                    onClick={() => handleDeleteRow(item.id)}
+                    className="text-red-500 hover:text-red-700 transition-colors duration-200"
+                    aria-label={`Delete item ${index + 1}`}
+                  >
                     <Trash2 className="h-5 w-5" />
                   </button>
                 </div>
@@ -613,7 +644,7 @@ export default function InvoiceForm() {
                       onChange={(e) =>
                         setItems(items.map((i) => (i.id === item.id ? { ...i, name: e.target.value } : i)))
                       }
-                      className="h-12"
+                      className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                     />
                   </div>
                   <div>
@@ -623,7 +654,7 @@ export default function InvoiceForm() {
                       onChange={(e) =>
                         setItems(items.map((i) => (i.id === item.id ? { ...i, hsn: e.target.value } : i)))
                       }
-                      className="h-12"
+                      className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -635,7 +666,7 @@ export default function InvoiceForm() {
                         onChange={(e) =>
                           setItems(items.map((i) => (i.id === item.id ? { ...i, qty: e.target.value } : i)))
                         }
-                        className="h-12"
+                        className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                       />
                     </div>
                     <div>
@@ -646,7 +677,7 @@ export default function InvoiceForm() {
                           setItems(items.map((i) => (i.id === item.id ? { ...i, unit: value } : i)))
                         }
                       >
-                        <SelectTrigger className="h-12">
+                        <SelectTrigger className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent side="top" className="z-50">
@@ -665,7 +696,7 @@ export default function InvoiceForm() {
                       onChange={(e) =>
                         setItems(items.map((i) => (i.id === item.id ? { ...i, price: e.target.value } : i)))
                       }
-                      className="h-12"
+                      className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                     />
                   </div>
                   <div>
@@ -676,7 +707,7 @@ export default function InvoiceForm() {
                         setItems(items.map((i) => (i.id === item.id ? { ...i, tax: value } : i)))
                       }
                     >
-                      <SelectTrigger className="h-12">
+                      <SelectTrigger className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent side="top" className="z-50">
@@ -699,23 +730,15 @@ export default function InvoiceForm() {
 
           {/* Add Item Button */}
           <Button
-            variant="link"
             onClick={addItem}
-            className="mt-4 text-indigo-600 hover:text-indigo-700 md:hidden"
-          >
-            + Add Item
-          </Button>
-          <Button
-            onClick={addItem}
-            className="hidden md:block mt-4 bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="hidden md:block mt-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-6 py-2 transition-transform duration-200 hover:scale-105"
           >
             Add Item
           </Button>
-
-          {/* Floating Add Item Button on Mobile */}
           <Button
             onClick={addItem}
-            className="fixed bottom-20 right-4 md:hidden bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-3 shadow-lg"
+            className="fixed bottom-20 right-4 md:hidden bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-3 shadow-lg transition-transform duration-200 hover:scale-105"
+            aria-label="Add new item"
           >
             <Plus className="h-6 w-6" />
           </Button>
@@ -727,7 +750,7 @@ export default function InvoiceForm() {
             <FormItem>
               <FormLabel className="text-sm font-medium text-gray-700">Payment Type</FormLabel>
               <Select value={paymentType} onValueChange={setPaymentType}>
-                <SelectTrigger className="w-full md:w-[200px] h-10 sm:h-12">
+                <SelectTrigger className="w-full md:w-[200px] h-10 sm:h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                   <SelectValue placeholder="Select Payment Type" />
                 </SelectTrigger>
                 <SelectContent side="top" className="z-50">
@@ -744,14 +767,14 @@ export default function InvoiceForm() {
                   value={chequeRef}
                   onChange={(e) => setChequeRef(e.target.value)}
                   placeholder="Enter reference number"
-                  className="h-10 sm:h-12"
+                  className="h-10 sm:h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                 />
               </FormItem>
             )}
             <Button
               variant="outline"
               onClick={() => setShowDescription(!showDescription)}
-              className="flex items-center"
+              className="flex items-center h-10 sm:h-12 px-6 border-indigo-600 text-indigo-600 hover:bg-indigo-50 transition-transform duration-200 hover:scale-105"
             >
               <FileText className="h-4 w-4 mr-2" />
               {showDescription ? "Hide Description" : "Add Description"}
@@ -761,7 +784,8 @@ export default function InvoiceForm() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter description here..."
-                className="min-h-[80px]"
+                className="h-[120px] border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                style={{ resize: 'none' }} // Disable resize here
               />
             )}
           </div>
@@ -784,7 +808,7 @@ export default function InvoiceForm() {
                 type="number"
                 value={received}
                 onChange={(e) => setReceived(Number(e.target.value))}
-                className="w-24 h-10 sm:h-12 text-right"
+                className="w-24 h-10 sm:h-12 text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
               />
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-gray-200">
@@ -798,14 +822,49 @@ export default function InvoiceForm() {
 
         {/* Fixed Bottom Bar on Mobile */}
         <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200 flex justify-end gap-3 md:static md:p-0 md:border-0">
-          <Button variant="outline" onClick={handleShare} className="h-10 sm:h-12 px-6">
+          <Button
+            variant="outline"
+            onClick={handleShare}
+            className="h-10 sm:h-12 px-6 border-indigo-600 text-indigo-600 hover:bg-indigo-50 transition-transform duration-200 hover:scale-105"
+          >
             Share
           </Button>
-          <Button onClick={handleSave} className="h-10 sm:h-12 px-6">
+          <Button
+            onClick={handleSave}
+            className="h-10 sm:h-12 px-6 bg-indigo-600 hover:bg-indigo-700 text-white transition-transform duration-200 hover:scale-105"
+          >
             Save
           </Button>
         </div>
       </div>
+
+      {/* Custom Animation Styles */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-in-out;
+        }
+        .animate-slide-in {
+          animation: slideIn 0.3s ease-in-out;
+        }
+      `}</style>
     </div>
   );
 }
