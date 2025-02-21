@@ -34,6 +34,8 @@ export default function ProfilePage() {
     const [phone, setPhone] = useState("");
     const [logo, setLogo] = useState(null);
     const [signature, setSignature] = useState(null);
+    const [logoUrl, setLogoUrl] = useState(""); // Added to store logo URL
+    const [signatureUrl, setSignatureUrl] = useState(""); // Added to store signature URL
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
@@ -58,6 +60,8 @@ export default function ProfilePage() {
                     setState(profileData.state || "");
                     setEmail(profileData.email || "");
                     setPhone(profileData.phone || "");
+                    setLogoUrl(profileData.logoUrl || ""); // Set logo URL from backend
+                    setSignatureUrl(profileData.signatureUrl || ""); // Set signature URL from backend
                 }
             } catch (e) {
                 console.error("Error fetching profile:", e);
@@ -83,8 +87,17 @@ export default function ProfilePage() {
 
         try {
             const response = await fetch("/api/profile", { method: "POST", body: formData });
-            if (response.ok) setMessage("Profile updated successfully!");
-            else setError("Failed to update profile.");
+            if (response.ok) {
+                setMessage("Profile updated successfully!");
+                // Refresh profile data after update to reflect latest URLs
+                const updatedProfile = await response.json();
+                setLogoUrl(updatedProfile.profile.logoUrl || "");
+                setSignatureUrl(updatedProfile.profile.signatureUrl || "");
+                setLogo(null); // Clear file input after upload
+                setSignature(null); // Clear file input after upload
+            } else {
+                setError("Failed to update profile.");
+            }
         } catch (e) {
             setError("Failed to update profile.");
             console.error("Profile update error:", e);
@@ -168,6 +181,13 @@ export default function ProfilePage() {
                 </FormItem>
                 <FormItem>
                     <FormLabel>Logo</FormLabel>
+                    {logoUrl && (
+                        <img
+                            src={logoUrl}
+                            alt="Company Logo"
+                            className="w-32 h-32 object-cover mb-2 rounded-lg"
+                        />
+                    )}
                     <Input
                         type="file"
                         accept="image/*"
@@ -177,6 +197,13 @@ export default function ProfilePage() {
                 </FormItem>
                 <FormItem>
                     <FormLabel>Signature</FormLabel>
+                    {signatureUrl && (
+                        <img
+                            src={signatureUrl}
+                            alt="Signature"
+                            className="w-32 h-32 object-cover mb-2 rounded-lg"
+                        />
+                    )}
                     <Input
                         type="file"
                         accept="image/*"

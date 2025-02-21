@@ -1,4 +1,3 @@
-// app/api/profile/route.js
 import { NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
@@ -29,7 +28,7 @@ async function uploadToCloudinary(file) {
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db(); // use default database or specify one, e.g., client.db('billmateDB')
+    const db = client.db();
     const profile = await db.collection('companyProfile').findOne({ _id: 1 });
     return NextResponse.json(profile || {});
   } catch (error) {
@@ -52,13 +51,17 @@ export async function POST(req) {
     const state = formData.get('state');
     const email = formData.get('email');
     const phone = formData.get('phone');
-
-    // Get files from formData (they come as Blobs)
     const logoFile = formData.get('logo');
     const signatureFile = formData.get('signature');
 
-    let logoUrl = null;
-    let signatureUrl = null;
+    // Connect to MongoDB and fetch the existing profile
+    const client = await clientPromise;
+    const db = client.db();
+    const existingProfile = await db.collection('companyProfile').findOne({ _id: 1 }) || {};
+
+    // Initialize with existing URLs (if they exist) instead of null
+    let logoUrl = existingProfile.logoUrl;
+    let signatureUrl = existingProfile.signatureUrl;
 
     // Upload logo to Cloudinary if provided
     if (logoFile && logoFile.size > 0) {
@@ -82,22 +85,20 @@ export async function POST(req) {
       }
     }
 
-    // Prepare your update data, including image URLs if available
+    // Prepare update data, using existing URLs if no new images are uploaded
     const updatedProfileData = {
-      _id: 1, // Fixed _id so there’s only one profile document
+      _id: 1,
       companyName,
       address,
       gstin,
       state,
       email,
       phone,
-      logoUrl,       // Will be null if not provided/uploaded
-      signatureUrl,  // Will be null if not provided/uploaded
+      logoUrl,
+      signatureUrl,
     };
 
-    // Connect to MongoDB and update the profile document with an upsert operation
-    const client = await clientPromise;
-    const db = client.db();
+    // Update the profile document
     await db
       .collection('companyProfile')
       .updateOne({ _id: 1 }, { $set: updatedProfileData }, { upsert: true });
