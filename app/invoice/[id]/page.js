@@ -311,18 +311,20 @@ export default function InvoicePage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.6 }}
-                        className="text-right mt-12"
+                        className="mt-12 flex justify-end"
                     >
-                        <p className="mb-2 text-gray-700">For: {profile.companyName}</p>
-                        {profile.signatureUrl && (
-                            <img
-                                src={profile.signatureUrl}
-                                alt="Signature"
-                                className="max-h-20 inline-block mb-2"
-                            />
-                        )}
-                        <div className="border-t border-gray-300 pt-1 inline-block">
-                            <p className="text-gray-800 font-semibold">Authorized Signatory</p>
+                        <div className="flex flex-col items-center max-w-xs">
+                            <p className="mb-2 text-gray-700 text-center">For: {profile.companyName}</p>
+                            {profile.signatureUrl && (
+                                <img
+                                    src={profile.signatureUrl}
+                                    alt="Signature"
+                                    className="max-h-20 mb-2"
+                                />
+                            )}
+                            <div className="border-t border-gray-300 pt-1 w-full">
+                                <p className="text-gray-800 font-semibold text-center">Authorized Signatory</p>
+                            </div>
                         </div>
                     </motion.div>
                 </div>
