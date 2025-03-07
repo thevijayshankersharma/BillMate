@@ -33,6 +33,7 @@ export default function PaymentAndDescription({
 
   return (
     <div className="flex flex-col md:flex-row justify-between gap-6 mb-8">
+      {/* Left Section: Payment Type and Description */}
       <div className="space-y-4">
         <FormItem>
           <FormLabel className="text-sm font-medium text-gray-700">Payment Type</FormLabel>
@@ -76,48 +77,55 @@ export default function PaymentAndDescription({
           />
         )}
       </div>
-      <div className="space-y-4 min-w-[200px]">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700">Total Qty</span>
-          <span className="text-sm text-gray-900">{totalQty}</span>
+
+      {/* Right Section: Summary and Buttons */}
+      <div className="flex flex-col gap-6">
+        {/* Summary Section */}
+        <div className="space-y-4 min-w-[200px]">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700">Total Qty</span>
+            <span className="text-sm text-gray-900">{totalQty}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700">Tax</span>
+            <span className="text-sm text-gray-900">{totalTax.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700">Total</span>
+            <span className="text-sm text-gray-900">{grandTotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium text-gray-700">Received</label>
+            <Input
+              type="number"
+              value={received}
+              onChange={(e) => setReceived(Math.max(0, Number(e.target.value)))}
+              className="w-24 h-10 sm:h-12 text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+              min="0"
+            />
+          </div>
+          <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+            <span className="text-sm font-semibold text-gray-800">Balance</span>
+            <span className="text-sm font-semibold text-gray-800">{(grandTotal - received).toFixed(2)}</span>
+          </div>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700">Tax</span>
-          <span className="text-sm text-gray-900">{totalTax.toFixed(2)}</span>
+
+        {/* Buttons Section */}
+        <div className="flex justify-end gap-3">
+          <Button
+            variant="outline"
+            onClick={onShare}
+            className="h-10 sm:h-12 px-6 border-indigo-600 text-indigo-600 hover:bg-indigo-50 transition-transform duration-200 hover:scale-105"
+          >
+            Share
+          </Button>
+          <Button
+            onClick={onSave}
+            className="h-10 sm:h-12 px-6 bg-indigo-600 hover:bg-indigo-700 text-white transition-transform duration-200 hover:scale-105"
+          >
+            Save
+          </Button>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700">Total</span>
-          <span className="text-sm text-gray-900">{grandTotal.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <label className="text-sm font-medium text-gray-700">Received</label>
-          <Input
-            type="number"
-            value={received}
-            onChange={(e) => setReceived(Math.max(0, Number(e.target.value)))}
-            className="w-24 h-10 sm:h-12 text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-            min="0"
-          />
-        </div>
-        <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-          <span className="text-sm font-semibold text-gray-800">Balance</span>
-          <span className="text-sm font-semibold text-gray-800">{(grandTotal - received).toFixed(2)}</span>
-        </div>
-      </div>
-      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200 flex justify-end gap-3 md:static md:p-0 md:border-0">
-        <Button
-          variant="outline"
-          onClick={onShare}
-          className="h-10 sm:h-12 px-6 border-indigo-600 text-indigo-600 hover:bg-indigo-50 transition-transform duration-200 hover:scale-105"
-        >
-          Share
-        </Button>
-        <Button
-          onClick={onSave}
-          className="h-10 sm:h-12 px-6 bg-indigo-600 hover:bg-indigo-700 text-white transition-transform duration-200 hover:scale-105"
-        >
-          Save
-        </Button>
       </div>
     </div>
   );

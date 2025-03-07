@@ -4,15 +4,10 @@ import React from 'react';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Trash2 } from 'lucide-react';
-import { units, taxRates } from '../../app/lib/constants';
-import { calculateTotal } from '../../app/lib/utils';
+import { units, taxRates } from '../../app/lib/constants'; // Adjust path as needed
+import { calculateTotal } from '../../app/lib/utils'; // Adjust path as needed
 
-export default function ItemsList({
-  items,
-  setItems,
-  savedItems,
-  onAddItem,
-}) {
+export default function ItemsList({ items, setItems, savedItems, onAddItem }) {
   const handleItemSelect = (value, itemId) => {
     if (value === "add") {
       onAddItem();
@@ -40,7 +35,10 @@ export default function ItemsList({
   return (
     <div className="md:hidden space-y-4">
       {items.map((item, index) => (
-        <div key={item.id} className="border rounded-xl p-4 bg-white shadow-md transition-all duration-300 animate-slide-in">
+        <div
+          key={item.id || `item-${index}`}
+          className="border rounded-xl p-4 bg-white shadow-md transition-all duration-300 animate-slide-in"
+        >
           <div className="flex justify-between items-center mb-2">
             <span className="font-medium text-gray-700">Item {index + 1}</span>
             <button
@@ -64,11 +62,16 @@ export default function ItemsList({
                 <SelectContent side="top" className="z-50">
                   <SelectItem key="add-item" value="add">+ Add Item</SelectItem>
                   {savedItems && Array.isArray(savedItems) ? (
-                    savedItems.map((savedItem) => (
-                      <SelectItem key={savedItem.id} value={savedItem.id?.toString()}>
-                        {savedItem.name}
-                      </SelectItem>
-                    ))
+                    savedItems
+                      .filter((savedItem) => savedItem.id != null)
+                      .map((savedItem) => (
+                        <SelectItem
+                          key={savedItem.id}
+                          value={savedItem.id.toString()}
+                        >
+                          {savedItem.name}
+                        </SelectItem>
+                      ))
                   ) : null}
                 </SelectContent>
               </Select>
@@ -77,7 +80,13 @@ export default function ItemsList({
               <label className="text-xs font-medium text-gray-600">HSN Code</label>
               <Input
                 value={item.hsn}
-                onChange={(e) => setItems(items.map((i) => (i.id === item.id ? { ...i, hsn: e.target.value } : i)))}
+                onChange={(e) =>
+                  setItems(
+                    items.map((i) =>
+                      i.id === item.id ? { ...i, hsn: e.target.value } : i
+                    )
+                  )
+                }
                 className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
               />
             </div>
@@ -87,7 +96,15 @@ export default function ItemsList({
                 <Input
                   type="number"
                   value={item.qty}
-                  onChange={(e) => setItems(items.map((i) => (i.id === item.id ? { ...i, qty: Math.max(0, e.target.value) } : i)))}
+                  onChange={(e) =>
+                    setItems(
+                      items.map((i) =>
+                        i.id === item.id
+                          ? { ...i, qty: Math.max(0, e.target.value) }
+                          : i
+                      )
+                    )
+                  }
                   className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                   min="0"
                 />
@@ -96,7 +113,13 @@ export default function ItemsList({
                 <label className="text-xs font-medium text-gray-600">Unit</label>
                 <Select
                   value={item.unit}
-                  onValueChange={(value) => setItems(items.map((i) => (i.id === item.id ? { ...i, unit: value } : i)))}
+                  onValueChange={(value) =>
+                    setItems(
+                      items.map((i) =>
+                        i.id === item.id ? { ...i, unit: value } : i
+                      )
+                    )
+                  }
                 >
                   <SelectTrigger className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                     <SelectValue placeholder="Select" />
@@ -116,7 +139,15 @@ export default function ItemsList({
               <Input
                 type="number"
                 value={item.price}
-                onChange={(e) => setItems(items.map((i) => (i.id === item.id ? { ...i, price: Math.max(0, e.target.value) } : i)))}
+                onChange={(e) =>
+                  setItems(
+                    items.map((i) =>
+                      i.id === item.id
+                        ? { ...i, price: Math.max(0, e.target.value) }
+                        : i
+                    )
+                  )
+                }
                 className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                 min="0"
               />
@@ -125,7 +156,13 @@ export default function ItemsList({
               <label className="text-xs font-medium text-gray-600">Tax</label>
               <Select
                 value={item.tax}
-                onValueChange={(value) => setItems(items.map((i) => (i.id === item.id ? { ...i, tax: value } : i)))}
+                onValueChange={(value) =>
+                  setItems(
+                    items.map((i) =>
+                      i.id === item.id ? { ...i, tax: value } : i
+                    )
+                  )
+                }
               >
                 <SelectTrigger className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                   <SelectValue placeholder="Select" />
@@ -141,7 +178,9 @@ export default function ItemsList({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs font-medium text-gray-600">Total</span>
-              <span className="text-sm font-semibold text-gray-900">{calculateTotal(item).toFixed(2)}</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {calculateTotal(item).toFixed(2)}
+              </span>
             </div>
           </div>
         </div>
