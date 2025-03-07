@@ -1,6 +1,8 @@
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+import { statesMap } from './constants'; // Added import for statesMap
+
 export function cn(...inputs) {
   return twMerge(clsx(...inputs));
 }
@@ -62,3 +64,30 @@ function convert(n) {
 export function numberToWords(num) {
   return convert(num);
 }
+
+export const parseGSTIN = (gstin) =>
+  !gstin || gstin.length < 2
+    ? { state: "", gstType: "Unregistered/Consumer" }
+    : {
+      state: statesMap[gstin.substring(0, 2)] || "",
+      gstType: statesMap[gstin.substring(0, 2)]
+        ? "Registered Business - Regular"
+        : "Unregistered/Consumer",
+    };
+
+export const getTaxRate = (tax) => ({
+  "GST@18%": 0.18,
+  "IGST@18%": 0.18,
+  "IGST@28%": 0.28,
+  "IGST@12%": 0.12,
+  "IGST@5%": 0.05,
+  "IGST@3%": 0.03,
+  "IGST@0.25%": 0.0025,
+  "IGST@0%": 0,
+}[tax] || 0);
+
+export const calculateTotal = (item) => {
+  const price = parseFloat(item.price) || 0;
+  const qty = parseFloat(item.qty) || 0;
+  return price * qty * (1 + getTaxRate(item.tax));
+};
